@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "934151626218",
+    "project_id": "birdquest9",
+    "storage_bucket": "birdquest9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:934151626218:android:b9676883d437edaf31a693",
+        "android_client_info": {
+          "package_name": "com.example.birdquest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyQXvaqFmWiyO-_MCwpY_e9XnU_KNEO54"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

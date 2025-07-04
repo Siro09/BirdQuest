@@ -1,0 +1,14 @@
+<!-- res/layout/item_answer_choice.xml -->
+<com.google.android.material.button.MaterialButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/buttonAnswerChoice"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:padding="16dp"
+    android:text="Answer Option"
+    android:textAppearance="?attr/textAppearanceButton"
+    android:textColor="?attr/colorOnPrimary"
+    app:cornerRadius="8dp"
+    style="?attr/materialButtonOutlinedStyle" /> <!-- Or use filled style: ?attr/materialButtonStyle -->

@@ -1,0 +1,76 @@
+package com.example.birdquest.db;
+
+import android.content.Context;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import com.example.birdquest.models.Bird;
+
+@Database(entities = {Bird.class}, version = 5, exportSchema = false) // Increment version number!
+public abstract class AppDatabase extends RoomDatabase {
+
+    private static final String TAG = "AppDatabase";
+    public abstract BirdDao birdDao();
+
+    private static volatile AppDatabase INSTANCE;
+    private static Context applicationContext;
+    /*static final Migration MIGRATION_3_4 = new Migration(3, 4) { // Assuming previous was 3
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // If you added a 'habitat' column to the Bird table
+            database.execSQL("ALTER TABLE birds ADD COLUMN image_url TEXT");
+            // If the new column 'habitat' cannot be null and has no default in the entity,
+            // you might want to provide a default value for existing rows:
+            // database.execSQL("ALTER TABLE bird_table ADD COLUMN habitat TEXT DEFAULT 'Unknown'");
+            Log.i(TAG, "Migration from version 3 to 4 (added image column) executed.");
+        }
+    };*/
+    public static AppDatabase getInstance(final Context context) {
+        if (applicationContext == null) {
+            applicationContext = context.getApplicationContext();
+        }
+
+        if (INSTANCE == null) {
+            synchronized (AppDatabase.class) {
+                if (INSTANCE == null) {
+                    Log.d(TAG, "Creating new database instance");
+                    INSTANCE = Room.databaseBuilder(applicationContext,
+                                    AppDatabase.class, "bird_database") // Your database name
+                            // ***** THIS IS THE KEY LINE *****
+                            .fallbackToDestructiveMigration()
+                            // *********************************
+                            //.addMigrations(MIGRATION_3_4)
+                            .addCallback(sRoomDatabaseCallback)
+                            .build();
+                }
+            }
+        }
+        return INSTANCE;
+    }
+
+    private static final RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
+        @Override
+        public void onCreate(@NonNull SupportSQLiteDatabase db) {
+            super.onCreate(db);
+            Log.i(TAG, "Database onCreate: Tables created (potentially after destructive migration).");
+            // Data will be populated by onOpen if needed
+        }
+
+        @Override
+        public void onOpen(@NonNull SupportSQLiteDatabase db) {
+            super.onOpen(db);
+            Log.i(TAG, "Database onOpen: Checking if data population is needed.");
+            if (applicationContext != null && INSTANCE != null) {
+                DataInitializer.populateDatabase(applicationContext, INSTANCE);
+            } else {
+                Log.e(TAG, "onOpen: Context or INSTANCE is null. Cannot populate data.");
+            }
+        }
+    };
+}

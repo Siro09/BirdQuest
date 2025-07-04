@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">BirdQuest</string>
+    <string name="bird_dex_title">BirdDex</string>
+    <string name="score_display">Score:</string>
+    <string name="question">Question:</string>
+    <string name="bird_image_for_quiz">Image of a bird to identify</string>
+    <string name="quiz">Quiz</string>
+    <string name="birddex">BirdDex</string>
+    <string name="progress">Progress</string>
+    <string name="logout">Logout</string>
+    <string name="birdquest">BirdQuest</string>
+</resources>
