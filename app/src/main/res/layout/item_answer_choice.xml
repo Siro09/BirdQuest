@@ -9,6 +9,6 @@
     android:padding="16dp"
     android:text="Answer Option"
     android:textAppearance="?attr/textAppearanceButton"
-    android:textColor="?attr/colorOnPrimary"
+    android:textColor="@color/purple_500"
     app:cornerRadius="8dp"
     style="?attr/materialButtonOutlinedStyle" /> <!-- Or use filled style: ?attr/materialButtonStyle -->
