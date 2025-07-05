@@ -88,6 +88,11 @@ public class RegisterActivity extends AppCompatActivity {
             editTextRegisterPassword.requestFocus();
             return;
         }
+        if (!(password.matches(".*[A-Z].*") && password.matches(".*[a-z].*") && password.matches(".*\\d.*"))) { // Firebase default minimum password length
+            editTextRegisterPassword.setError("Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.");
+            editTextRegisterPassword.requestFocus();
+            return;
+        }
 
         // Optional: Confirm Password Validation
         if (TextUtils.isEmpty(confirmPassword)) {
@@ -99,9 +104,7 @@ public class RegisterActivity extends AppCompatActivity {
         if (!password.equals(confirmPassword)) {
             editTextRegisterConfirmPassword.setError("Passwords do not match.");
             editTextRegisterConfirmPassword.requestFocus();
-            // Clear the password fields for better UX if desired
-            // editTextRegisterPassword.setText("");
-            // editTextRegisterConfirmPassword.setText("");
+
             return;
         }
         // --- End Input Validations ---
@@ -124,15 +127,13 @@ public class RegisterActivity extends AppCompatActivity {
                             // Optional: Send email verification
                             // user.sendEmailVerification();
 
-                            // Navigate to MainActivity or LoginActivity
-                            // For example, navigate to LoginActivity to let the user log in
                             Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                             // Clear the activity stack so user can't go back to register screen with back button
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);
                             finish();
 
-                            // Or directly to MainActivity if you want to auto-login after registration
+                            // Or directly to MainActivity
                             // Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                             // startActivity(intent);
                             // finish();
