@@ -1,25 +1,40 @@
 package com.example.birdquest.models;
+import com.google.firebase.firestore.Exclude;
 import com.google.firebase.firestore.IgnoreExtraProperties; // For Firestore
 
-@IgnoreExtraProperties // Good practice for Firestore too
+import java.util.ArrayList;
+import java.util.Collection;
+
+@IgnoreExtraProperties // Good practice for Firestore
 public class User {
 
     private String email;
-    private int xp;      // Using long for XP in case it gets very large
+    private int xp;
     private int level;
-
+    // Counters for achievement tracking
+    private int quizCompletions;
+    private int perfectQuizScores;
+    @Exclude
+    private Collection<IdentifiedBird> uniqueCorrectBirdsIdentified; // Map of birdId to true
+    @Exclude
+    private Collection<Achievement> achievements;
     // Default constructor is required for calls to DataSnapshot.getValue(User.class)
     // and for Firestore's toObject(User.class)
     public User() {
+        this.uniqueCorrectBirdsIdentified = new ArrayList<IdentifiedBird>();
+        this.achievements = new ArrayList<Achievement>();
     }
 
     public User(String email, int xp, int level) {
         this.email = email;
         this.xp = xp;
         this.level = level;
+        this.quizCompletions = 0;
+        this.perfectQuizScores = 0;
+        this.uniqueCorrectBirdsIdentified =  new ArrayList<>();
+        this.achievements = new ArrayList<Achievement>();
     }
 
-    // Getters
     public String getEmail() {
         return email;
     }
@@ -32,8 +47,7 @@ public class User {
         return level;
     }
 
-    // Setters (optional, but can be useful if you modify user objects locally before saving)
-    public void setEmail(String email) {
+   public void setEmail(String email) {
         this.email = email;
     }
 
@@ -44,12 +58,37 @@ public class User {
     public void setLevel(int level) {
         this.level = level;
     }
+    public  void setQuizCompletions(int quizCompletions) {
+        this.quizCompletions = quizCompletions;
 
-    // You might want to add other methods if needed, e.g.,
-    // public void addXp(long amount) {
-    //     this.xp += amount;
-    //     // Potentially update level here based on new XP
-    // }
+    }
+    public Collection<IdentifiedBird>  getUniqueCorrectBirdsIdentified() {
+        return uniqueCorrectBirdsIdentified;
+    }
+
+    public void setUniqueCorrectBirdsIdentified(Collection<IdentifiedBird> uniqueCorrectBirdsIdentified) {
+        this.uniqueCorrectBirdsIdentified = uniqueCorrectBirdsIdentified;
+    }
+
+    public int getPerfectQuizScores() {
+        return perfectQuizScores;
+    }
+
+    public void setPerfectQuizScores(int perfectQuizScores) {
+        this.perfectQuizScores = perfectQuizScores;
+    }
+
+    public int getQuizCompletions() {
+        return quizCompletions;
+    }
+
+    public Collection<Achievement> getAchievements() {
+        return achievements;
+    }
+
+    public void setAchievements(Collection<Achievement> achievements) {
+        this.achievements = achievements;
+    }
 
     @Override
     public String toString() {
@@ -57,6 +96,14 @@ public class User {
                 "email='" + email + '\'' +
                 ", xp=" + xp +
                 ", level=" + level +
+                ", quizCompletions=" + quizCompletions +
+                ", perfectQuizScores=" + perfectQuizScores +
+                ", uniqueCorrectBirdsIdentified=" + uniqueCorrectBirdsIdentified +
+                ", achievements=" + achievements +
                 '}';
+    }
+
+    public int getUniqueCorrectBirdsCount() {
+        return uniqueCorrectBirdsIdentified.size();
     }
 }

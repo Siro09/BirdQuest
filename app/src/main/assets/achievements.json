@@ -1,0 +1,25 @@
+{
+  "achievements": {
+    "quiz_novice": {
+      "name": "Quiz Novice",
+      "description": "Complete your first quiz.",
+      "xpReward": 10,
+      "criteriaType": "QUIZ_COMPLETIONS",
+      "criteriaValue": 1
+    },
+    "bird_spotter_beginner": {
+      "name": "Bird Spotter Beginner",
+      "description": "Correctly identify 5 different birds.",
+      "xpReward": 25,
+      "criteriaType": "UNIQUE_BIRDS_IDENTIFIED",
+      "criteriaValue": 5
+    },
+    "perfect_quiz_ace": {
+      "name": "Quiz Ace",
+        "description": "Get a perfect score on any quiz.",
+        "xpReward": 40,
+      "criteriaType": "PERFECT_QUIZZES",
+      "criteriaValue": 1
+    }
+  }
+}

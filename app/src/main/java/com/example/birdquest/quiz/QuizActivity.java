@@ -4,9 +4,6 @@ package com.example.birdquest.quiz; // Or your desired package
 import java.util.concurrent.ExecutorService; // Added
 import java.util.concurrent.Executors;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,7 +12,6 @@ import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,29 +23,32 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.example.birdquest.Managers.AchievementManager;
 import com.example.birdquest.R; // Your R file
 import com.example.birdquest.db.AppDatabase;
 import com.example.birdquest.db.BirdDao;
 import com.example.birdquest.models.Bird;
+import com.example.birdquest.models.User;
 import com.google.android.material.button.MaterialButton; // For MaterialButton styling
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
-import com.example.birdquest.GamificationManager;
+import com.example.birdquest.Managers.GamificationManager;
 
-public class QuizActivity extends AppCompatActivity {
+import org.checkerframework.checker.units.qual.A;
+
+public class QuizActivity extends AppCompatActivity implements  AchievementManager.DefinitionsLoadedListener {
 
     private static final String TAG = "QuizActivity";
     private static final long DELAY_NEXT_QUESTION = 1500; // 1.5 seconds for auto-advance
     private ImageView imageViewBird; // Add this for displaying the bird image
     private AppDatabase appDb;
 
+    AchievementManager achievementManager;
     // Executor for background database operations
     private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
     // Handler to post results back to the main thread
@@ -64,6 +63,7 @@ public class QuizActivity extends AppCompatActivity {
     private int currentQuestionIndex = 0;
     private int score = 0;
     private boolean answerSelectedThisTurn = false; // To prevent multiple answer clicks for one question
+
 
     // Keys for saving state
     private static final String KEY_CURRENT_QUESTION_INDEX = "currentQuestionIndex";
@@ -355,6 +355,26 @@ public class QuizActivity extends AppCompatActivity {
 
         if (isCorrect) {
             score++;
+            String identifiedBird = currentQuestion.getCorrectAnswer();
+            GamificationManager gamificationManager = new GamificationManager();
+            gamificationManager.hasUserIdentifiedBirdBefore(identifiedBird, new GamificationManager.BirdIdentificationCheckListener() {
+            @Override
+            public void onResult(boolean isAlreadyIdentified, boolean errorOccurred) {
+                if (errorOccurred) {
+                    // Handle the error (e.g., show a message, log it)
+                    Log.e("BirdCheck", "Error checking bird identification status.");
+                    return;
+                }
+
+                if (isAlreadyIdentified) {
+                    Log.d("BirdCheck", identifiedBird + " has been identified before by this user.");
+                    // UI Logic: Maybe show a "✓ Already Identified" badge
+                } else {
+                    Log.d("BirdCheck", identifiedBird + " has NOT been identified before by this user.");
+                    GamificationManager.addUniqueCorrectBirdsIdentified(QuizActivity.this,identifiedBird);
+                }
+            }
+            });
             selectedButton.setBackgroundColor(ContextCompat.getColor(this, R.color.correct_answer_green)); // Define this color
             selectedButton.setTextColor(Color.WHITE);
             Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
@@ -403,9 +423,18 @@ public class QuizActivity extends AppCompatActivity {
         textViewQuestion.setAlpha(0f);
 
 
-        //add xp
+        //track gamification
         GamificationManager.addXP(this,score * 5);
+        GamificationManager.addQuizCompletions(this);
+        if(score == questionList.size()){
+            GamificationManager.addPerfectQuizScores(this);
+        }
 
+        achievementManager = new AchievementManager(this);
+        achievementManager.registerDefinitionsLoadedListener(this);
+        if (!achievementManager.areDefinitionsLoaded()) {
+            achievementManager.loadAllAchievementDefinitions();
+        }
         // Display final score in an AlertDialog
         new AlertDialog.Builder(this)
                 .setTitle("Quiz Finished!")
@@ -442,5 +471,28 @@ public class QuizActivity extends AppCompatActivity {
         // if (buttonNextQuestion != null) {
         //     buttonNextQuestion.setVisibility(View.GONE);
         // }
+    }
+
+    @Override
+    public void onDefinitionsLoaded() {
+        Log.d(TAG, "Achievement definitions loaded. Now checking achievements.");
+        if (achievementManager != null) {
+            achievementManager.checkAndAwardAchievements();
+
+        }
+    }
+    @Override
+    public void onDefinitionsLoadFailed() {
+        Log.e(TAG, "Failed to load achievement definitions.");
+        Toast.makeText(this, "Could not load achievement data. Please try again later.", Toast.LENGTH_LONG).show();
+        // Handle the failure case, maybe disable achievement-related UI
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Unregister listener to prevent memory leaks
+        if (achievementManager != null) {
+            achievementManager.unregisterDefinitionsLoadedListener(this);
+        }
     }
 }
