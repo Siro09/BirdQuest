@@ -45,6 +45,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
 
     implementation ("androidx.recyclerview:recyclerview:1.3.2") // Or latest version
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2") // Or latest

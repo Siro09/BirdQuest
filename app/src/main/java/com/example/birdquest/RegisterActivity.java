@@ -1,4 +1,4 @@
-package com.example.birdquest; // Make sure this matches your app's package name
+package com.example.birdquest;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,12 +15,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.birdquest.models.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-// Import other necessary classes if you plan to save more user data to Firestore/Realtime Database
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -34,7 +35,7 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView textViewRegisterError;
 
     private FirebaseAuth mAuth;
-
+    private FirebaseFirestore mFirestore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +43,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
-
+        mFirestore  = FirebaseFirestore.getInstance();
         // Initialize UI elements
         editTextRegisterEmail = findViewById(R.id.editTextRegisterEmail);
         editTextRegisterPassword = findViewById(R.id.editTextRegisterPassword);
@@ -120,12 +121,29 @@ public class RegisterActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "createUserWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
+                            FirebaseUser firebaseUser = mAuth.getCurrentUser();
                             Toast.makeText(RegisterActivity.this, "Registration successful.",
                                     Toast.LENGTH_SHORT).show();
 
                             // Optional: Send email verification
                             // user.sendEmailVerification();
+                            User newUser = new User(email, 0, 1);
+                            String userId = "";
+                            if (firebaseUser != null) {
+                                userId = firebaseUser.getUid();
+                                mFirestore.collection("users").document(userId).set(newUser)
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> dbTask) {
+
+                                                if (dbTask.isSuccessful()) {
+                                                    Log.d(TAG, "User data added to Database successfully.");
+                                                } else {
+                                                    Log.e(TAG, "Failed to add user data to Database.", dbTask.getException());
+                                                }
+                                            }
+                                        });
+                            }
 
                             Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                             // Clear the activity stack so user can't go back to register screen with back button

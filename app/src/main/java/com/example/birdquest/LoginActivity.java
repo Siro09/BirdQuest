@@ -23,6 +23,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -191,7 +195,44 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void navigateToMainActivity(FirebaseUser user) {
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+        String userId = user.getUid();
+        firebaseFirestore.collection("users").document(userId).get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                           @Override
+                                           public void onComplete(@NonNull Task<DocumentSnapshot> task) {
 
+                                               if (task.isSuccessful()) {
+                                                   DocumentSnapshot document = task.getResult();
+                                                   if (document != null && document.exists()) {
+                                                       Log.d(TAG, "User document data: " + document.getData());
+
+                                                       // Safely get XP and Level
+                                                       Long xpLong = document.getLong("xp");
+                                                       Long levelLong = document.getLong("level");
+
+                                                       int xp = 0; // Default value
+                                                       int level = 1; // Default value
+
+                                                       if (xpLong != null) {
+                                                           xp = xpLong.intValue();
+                                                       } else {
+                                                           Log.w(TAG, "XP field is null or missing in user document for UID: " + userId);
+                                                           // Handle case where XP might be missing, perhaps set a default or log an error
+                                                       }
+
+                                                       if (levelLong != null) {
+                                                           level = levelLong.intValue();
+                                                       } else {
+                                                           Log.w(TAG, "Level field is null or missing in user document for UID: " + userId);
+                                                           // Handle case where Level might be missing
+                                                       }
+                                                       GamificationManager.setXP(LoginActivity.this,xp);
+                                                       GamificationManager.setLevel(LoginActivity.this,level);
+                                                   }
+                                               }
+                                           }
+                });
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(intent);
         finish();

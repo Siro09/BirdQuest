@@ -5,8 +5,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.birdquest.GamificationManager;
-
 public class GamificationActivity extends AppCompatActivity {
 
     private TextView tvXp, tvLevel;
@@ -19,8 +17,8 @@ public class GamificationActivity extends AppCompatActivity {
         tvXp = findViewById(R.id.tvXp);
         tvLevel = findViewById(R.id.tvLevel);
 
-        int xp = GamificationManager.getXP(this);
-        int level = GamificationManager.getLevel(this);
+        int xp = GamificationManager.getUserXP(this);
+        int level = GamificationManager.getUserLevel(this);
 
         tvXp.setText("XP: " + xp);
         tvLevel.setText("Level: " + level);
