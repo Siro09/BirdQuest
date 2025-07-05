@@ -41,12 +41,8 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Assuming your login XML file is named Login.xml or activity_login.xml
-        // If you named it Login.xml as per previous context:
-        setContentView(R.layout.activity_login);
-        // If you named it activity_login.xml (more conventional):
-        // setContentView(R.layout.activity_login);
 
+        setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
 

@@ -41,11 +41,10 @@ public class Bird {
         this.imageUrl = null;
     }
 
-    // It's good practice to have a default constructor for Room,
-    // though not strictly necessary if you only use the parameterized one for creation.
+
     public Bird() {}
 
-    // Getters and Setters (Optional if fields are public, but good practice)
+    // Getters and Setters
 
     public int getId() {
         return id;

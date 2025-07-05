@@ -1,4 +1,4 @@
-package com.example.birdquest.db; // Or your appropriate package
+package com.example.birdquest.db;
 
 import android.content.Context;
 import android.util.Log;
@@ -49,7 +49,7 @@ public class DataInitializer {
                 }
                 if (urlsJsonString == null) {
                     Log.e(TAG, "Failed to load " + BIRD_URL_FILE + ". Image URLs might be missing.");
-                    // Decide if you want to proceed without URLs or stop
+
                 }
 
                 // Create a map for quick URL lookup by latin_name

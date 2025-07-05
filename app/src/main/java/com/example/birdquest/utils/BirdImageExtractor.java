@@ -69,9 +69,7 @@ public class BirdImageExtractor {
 
                 Log.d(TAG, "Checking img src: " + imgSrc);
 
-                // 3. Analyze the src attribute
-                // Ensure the image is from the same domain (or the expected image domain)
-                // This helps avoid matching images from ads or other unrelated sources.
+
                 if (!imgSrc.toLowerCase(Locale.ROOT).startsWith("https://pasaridinromania.sor.ro/")) {
                     Log.d(TAG, "Skipping image from different domain: " + imgSrc);
                     continue;

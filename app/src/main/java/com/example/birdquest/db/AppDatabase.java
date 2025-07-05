@@ -23,11 +23,9 @@ public abstract class AppDatabase extends RoomDatabase {
     /*static final Migration MIGRATION_3_4 = new Migration(3, 4) { // Assuming previous was 3
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            // If you added a 'habitat' column to the Bird table
+
             database.execSQL("ALTER TABLE birds ADD COLUMN image_url TEXT");
-            // If the new column 'habitat' cannot be null and has no default in the entity,
-            // you might want to provide a default value for existing rows:
-            // database.execSQL("ALTER TABLE bird_table ADD COLUMN habitat TEXT DEFAULT 'Unknown'");
+           1
             Log.i(TAG, "Migration from version 3 to 4 (added image column) executed.");
         }
     };*/
@@ -42,9 +40,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     Log.d(TAG, "Creating new database instance");
                     INSTANCE = Room.databaseBuilder(applicationContext,
                                     AppDatabase.class, "bird_database") // Your database name
-                            // ***** THIS IS THE KEY LINE *****
                             .fallbackToDestructiveMigration()
-                            // *********************************
                             //.addMigrations(MIGRATION_3_4)
                             .addCallback(sRoomDatabaseCallback)
                             .build();
