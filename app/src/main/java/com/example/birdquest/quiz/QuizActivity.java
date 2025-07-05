@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -63,6 +65,12 @@ public class QuizActivity extends AppCompatActivity {
     private int score = 0;
     private boolean answerSelectedThisTurn = false; // To prevent multiple answer clicks for one question
 
+    // Keys for saving state
+    private static final String KEY_CURRENT_QUESTION_INDEX = "currentQuestionIndex";
+    private static final String KEY_SCORE = "score";
+    private static final String KEY_QUESTION_LIST = "questionList"; // If Question is Parcelable/Serializable
+    private static final String KEY_ANSWER_SELECTED_THIS_TURN = "answerSelectedThisTurn";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,15 +83,37 @@ public class QuizActivity extends AppCompatActivity {
         imageViewBird = findViewById(R.id.imageViewBird); // Initialize ImageView
         // buttonNextQuestion = findViewById(R.id.buttonNextQuestion); // Uncomment if using manual next
         appDb = AppDatabase.getInstance(getApplicationContext());
-        loadQuestionsInBackground(); // Load your quiz questions
+        if (savedInstanceState != null) {
+            // Restore state
+            currentQuestionIndex = savedInstanceState.getInt(KEY_CURRENT_QUESTION_INDEX);
+            score = savedInstanceState.getInt(KEY_SCORE);
+            answerSelectedThisTurn = savedInstanceState.getBoolean(KEY_ANSWER_SELECTED_THIS_TURN);
 
-        /*if (questionList != null && !questionList.isEmpty()) {
-            displayQuestion();
+            // For the questionList, it's more complex if it's a list of custom objects.
+            // Option A: If Question is Parcelable
+            if (savedInstanceState.containsKey(KEY_QUESTION_LIST)) {
+                questionList = savedInstanceState.getParcelableArrayList(KEY_QUESTION_LIST);
+            }
+
+
+            if (questionList != null && !questionList.isEmpty() && currentQuestionIndex < questionList.size()) {
+                Log.d(TAG, "Restored state: index=" + currentQuestionIndex + ", score=" + score + ", questions=" + questionList.size());
+
+                displayQuestion(); // Display the restored question
+            } else {
+                // If questionList couldn't be restored or is invalid, load fresh
+                Log.d(TAG, "Question list not properly restored or empty, loading fresh.");
+                questionList = new ArrayList<>(); // Initialize if null
+                loadQuestionsInBackground();
+            }
         } else {
-            textViewQuestion.setText("No questions loaded!");
-            Toast.makeText(this, "Error: No questions available.", Toast.LENGTH_LONG).show();
-            // Optionally, finish the activity or show an error dialog
-        }*/
+            // No saved state, load fresh
+            Log.d(TAG, "No saved state, loading fresh questions.");
+            questionList = new ArrayList<>(); // Initialize
+            loadQuestionsInBackground();
+
+        }
+
 
         // If using a manual next button:
         /*
@@ -96,6 +126,24 @@ public class QuizActivity extends AppCompatActivity {
         });
         */
     }
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSaveInstanceState called");
+        outState.putInt(KEY_CURRENT_QUESTION_INDEX, currentQuestionIndex);
+        outState.putInt(KEY_SCORE, score);
+        outState.putBoolean(KEY_ANSWER_SELECTED_THIS_TURN, answerSelectedThisTurn);
+
+        // Save the question list if it's not null and not empty
+        // This requires your Question class to be Parcelable or Serializable
+        if (questionList != null && !questionList.isEmpty()) {
+            // Option A: If Question is Parcelable
+            outState.putParcelableArrayList(KEY_QUESTION_LIST, (ArrayList<? extends Parcelable>) questionList);
+            // Option B: If Question is Serializable
+            // outState.putSerializable(KEY_QUESTION_LIST, (ArrayList<Question>) questionList);
+        }
+    }
+
 
     private void loadQuestionsHardCoded() {
         // In a real app, load from a database, file, or network
@@ -201,9 +249,10 @@ public class QuizActivity extends AppCompatActivity {
                 if (finalSuccess && !tempQuestionList.isEmpty()) {
                     questionList.clear();
                     questionList.addAll(tempQuestionList);
+                    displayQuestion();
                     Collections.shuffle(questionList); // Shuffle the final list
                     Log.i(TAG, "Successfully generated " + questionList.size() + " questions.");
-                    displayQuestion();
+
                 } else {
                     // Handle error: update UI to show error message
                     String errorToDisplay = finalErrorMessage != null ? finalErrorMessage : "Error: No questions available.";
@@ -225,87 +274,7 @@ public class QuizActivity extends AppCompatActivity {
         });
 
         }
-        /** bad database calls dont use this method for it will CRASH main thread
-         *
-        *
-         */
-    private void loadQuestions()
-    {
 
-        questionList = new ArrayList<>();
-
-        BirdDao birdDao = appDb.birdDao();
-
-        List<Bird> quizBirds = birdDao.getRandomBirdsWithImages(10);
-
-        if (quizBirds == null || quizBirds.size() < 4) { // Need at least 4 birds for 1 correct + 3 distractors
-            Log.e(TAG, "Not enough birds with images in the database to create a quiz. Found: " + (quizBirds == null ? 0 : quizBirds.size()));
-            Toast.makeText(this, "Not enough bird data for the quiz.", Toast.LENGTH_LONG).show();
-            // Handle this case: show error, finish activity, etc.
-            textViewQuestion.setText("Error: Not enough bird data for quiz.");
-            return;
-        }
-
-        // 2. Get all common names to use as potential distractors
-        List<String> allCommonNames = birdDao.getAllBirdCommonNames();
-        if (allCommonNames == null || allCommonNames.isEmpty()) {
-            Log.e(TAG, "No common names found in the database for distractors.");
-            Toast.makeText(this, "Error loading distractor names.", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        Random random = new Random();
-        for (Bird correctBird : quizBirds) {
-            if (correctBird.getCommonName() == null || correctBird.getCommonName().trim().isEmpty() ||
-                    correctBird.getImageUrl() == null || correctBird.getImageUrl().trim().isEmpty()) {
-                Log.w(TAG, "Skipping bird with missing name or image URL: " + correctBird.commonName);
-                continue; // Skip this bird if essential info is missing
-            }
-
-            String questionText = "Identify this bird:"; // Or store image URL here if Question model changes
-            List<String> options = new ArrayList<>();
-            options.add(correctBird.getCommonName()); // Add the correct answer
-
-            // 3. Select 3 unique distractor names
-            Set<String> distractorSet = new HashSet<>();
-            distractorSet.add(correctBird.getCommonName()); // Ensure distractors are different from correct answer
-
-            while (options.size() < 4 && distractorSet.size() < allCommonNames.size()) {
-                String randomDistractorName = allCommonNames.get(random.nextInt(allCommonNames.size()));
-                if (!distractorSet.contains(randomDistractorName)) {
-                    options.add(randomDistractorName);
-                    distractorSet.add(randomDistractorName);
-                }
-            }
-            // If not enough unique distractors, fill with any available (less ideal)
-            // This might happen if allCommonNames is very small
-            int currentOptionSize = options.size();
-            for(int i=0; i < (4-currentOptionSize) && i < allCommonNames.size(); i++){
-                if(!options.contains(allCommonNames.get(i))){
-                    options.add(allCommonNames.get(i));
-                }
-            }
-            Collections.shuffle(options); // Shuffle the order of options
-
-            int correctAnswerIndex = options.indexOf(correctBird.getCommonName());
-
-            // You might need to adjust your Question class to store the image URL
-            // or pass it separately to displayQuestion.
-            // For now, let's assume Question can store an identifier or the image URL directly.
-            // If Question stores image URL: new Question(questionText, options, correctAnswerIndex, correctBird.getImageUrl())
-            // If Question only stores text: new Question(questionText, options, correctAnswerIndex)
-            // and you'll fetch the bird again in displayQuestion or pass the bird object.
-            // Let's modify Question to hold an image URL.
-
-            questionList.add(new Question(questionText, options, correctAnswerIndex, correctBird.getImageUrl()));
-        }
-        if (questionList.isEmpty() && !quizBirds.isEmpty()) {
-            Log.w(TAG, "Finished processing birds, but questionList is still empty. This might be due to all birds failing validation or lacking enough distractors.");
-        } else if (!questionList.isEmpty()) {
-            Collections.shuffle(questionList); // Shuffle the order of all generated questions
-            Log.i(TAG, "Successfully generated " + questionList.size() + " questions for the quiz.");
-        }
-    }
     private void displayQuestion() {
         if (currentQuestionIndex < questionList.size()) {
             answerSelectedThisTurn = false; // Reset for the new question
