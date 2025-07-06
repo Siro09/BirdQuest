@@ -271,7 +271,6 @@
                 android:clipToPadding="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/item_achievement"
-                tools:itemCount="3"
                 android:nestedScrollingEnabled="false"/>
             <!-- nestedScrollingEnabled="false" is important if RecyclerView is inside NestedScrollView
                  and you want the NestedScrollView to handle the primary scrolling.

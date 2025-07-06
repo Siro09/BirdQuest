@@ -1,11 +1,14 @@
 package com.example.birdquest.adapters; // Or your appropriate package
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,6 +54,25 @@ public class BirdAdapter extends RecyclerView.Adapter<BirdAdapter.BirdViewHolder
             // Set a default image if URL is null or empty
             holder.imageViewBird.setImageResource(R.drawable.ic_bird_placeholder); // Create this drawable
         }
+
+        holder.imageViewBird.setOnClickListener(v -> {
+            String url = currentBird.siteUrl;
+            if (url != null && !url.isEmpty()) {
+                if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    url = "http://" + url; // Basic attempt to ensure URL has a scheme
+                }
+                try {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    context.startActivity(browserIntent);
+                } catch (Exception e) {
+                    // Handle cases where URL is malformed or no browser can handle it
+                    Toast.makeText(context, "Could not open link: Invalid URL", Toast.LENGTH_SHORT).show();
+                    // Log.e("BirdAdapter", "Error opening URL: " + url, e);
+                }
+            } else {
+                Toast.makeText(context, "No link available for this bird.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
