@@ -6,11 +6,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable; // Added for optional callback
 
 import com.example.birdquest.R;
-import com.example.birdquest.models.Achievement;
+import com.example.birdquest.models.Achievement; // Keep if used by User model
 import com.example.birdquest.models.IdentifiedBird;
-import com.example.birdquest.models.User;
+import com.example.birdquest.models.User; // Keep if used for caching, though not directly in these static methods
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -21,16 +22,18 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+// import java.util.Map; // Not used in the provided snippet
 
 public class GamificationManager {
     private static final String TAG = "GamificationManager";
     private static final String USERS_COLLECTION = "users";
     private static final String UNLOCKED_ACHIEVEMENTS_SUBCOLLECTION = "unlockedAchievements";
-    private static final String PREFS_NAME = "GamificationPrefs";
+    // private static final String PREFS_NAME = "GamificationPrefs";
     private static final String KEY_XP = "xp";
     private static final String KEY_LEVEL = "level";
     private static final String KEY_QUIZ_COMPLETIONS = "quizCompletions";
@@ -67,320 +70,508 @@ public class GamificationManager {
     {
         return  user.getAchievements();
     }
-    public static int getQuizCompletions(Context context) {
+
+    // --- Callback Interfaces ---
+    public interface XpCallback {
+        void onXpReceived(int xp);
+        void onError(Exception e);
+    }
+
+    public interface LevelCallback {
+        void onLevelReceived(int level);
+        void onError(Exception e);
+    }
+
+    public interface QuizCompletionsCallback {
+        void onQuizCompletionsReceived(int count);
+        void onError(Exception e);
+    }
+
+    public interface PerfectQuizScoresCallback {
+        void onPerfectQuizScoresReceived(int count);
+        void onError(Exception e);
+    }
+
+    public interface UniqueBirdsCountCallback {
+        void onUniqueBirdsCountReceived(int count);
+        void onError(Exception e);
+    }
+
+    // Optional: For write operations if you need to know when they complete
+    public interface WriteOperationCallback {
+        void onSuccess();
+        void onError(Exception e);
+    }
+
+
+    // --- Methods to GET data with Callbacks ---
+
+    public static void getUserXP(Context context, XpCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        final int[] quizCompletions = {1};
+
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document != null && document.exists()) {
-                                    Long quizCompletionsLong = document.getLong(KEY_QUIZ_COMPLETIONS);
-                                    if (quizCompletionsLong != null) {
-                                        quizCompletions[0] = quizCompletionsLong.intValue();
-                                    } else {
-                                        Log.w(TAG, "quizCompletions field is null or missing in user document for UID: " + currentUser.getUid());
-                                        // Handle case where Level might be missing
-                                    }
-
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                Long xpLong = document.getLong(KEY_XP);
+                                if (xpLong != null) {
+                                    callback.onXpReceived(xpLong.intValue());
+                                } else {
+                                    Log.w(TAG, "XP field is null or missing for UID: " + currentUser.getUid());
+                                    callback.onXpReceived(0); // Default or specific error handling
                                 }
-                                Log.d("FirestoreUpdate", "User quizCompletions updated successfully.");
-                                // Optionally, notify the user or update UI
                             } else {
-                                Log.e("FirestoreUpdate", "Error updating user quizCompletions: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
+                                Log.w(TAG, "User document does not exist for UID: " + currentUser.getUid());
+                                callback.onXpReceived(0); // Default or specific error handling
                             }
+                        } else {
+                            Log.e(TAG, "Error getting user XP: ", task.getException());
+                            callback.onError(task.getException());
                         }
                     });
+        } else {
+            Log.w(TAG, "Current user is null, cannot fetch XP.");
+            callback.onError(new Exception("User not logged in"));
         }
-        return quizCompletions[0];
-
     }
-    public static int getPerfectQuizScores(Context context) {
+
+    public static void getUserLevel(Context context, LevelCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        final int[] perfectQuizScores = {1};
+
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document != null && document.exists()) {
-                                    Long perfectQuizScoresLong = document.getLong(KEY_PERFECT_QUIZ_SCORES);
-                                    if (perfectQuizScoresLong != null) {
-                                        perfectQuizScores[0] = perfectQuizScoresLong.intValue();
-                                    } else {
-                                        Log.w(TAG, "perfectQuizScores field is null or missing in user document for UID: " + currentUser.getUid());
-                                        // Handle case where Level might be missing
-                                    }
-
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                Long levelLong = document.getLong(KEY_LEVEL);
+                                if (levelLong != null) {
+                                    callback.onLevelReceived(levelLong.intValue());
+                                } else {
+                                    Log.w(TAG, "Level field is null or missing for UID: " + currentUser.getUid());
+                                    callback.onLevelReceived(1); // Default level
                                 }
-                                Log.d("FirestoreUpdate", "User perfectQuizScores updated successfully.");
-                                // Optionally, notify the user or update UI
                             } else {
-                                Log.e("FirestoreUpdate", "Error updating user perfectQuizScores: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
+                                Log.w(TAG, "User document does not exist for UID: " + currentUser.getUid());
+                                callback.onLevelReceived(1); // Default level
                             }
+                        } else {
+                            Log.e(TAG, "Error getting user level: ", task.getException());
+                            callback.onError(task.getException());
                         }
                     });
+        } else {
+            Log.w(TAG, "Current user is null, cannot fetch level.");
+            callback.onError(new Exception("User not logged in"));
         }
-        return perfectQuizScores[0];
     }
-    public static int getUniqueCorrectBirdsIdentified(Context context) {
+
+
+    public static void getQuizCompletions(Context context, QuizCompletionsCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        final int[] uniqueCorrectBirdsIdentified = {1};
+
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document != null && document.exists()) {
-                                    Long uniqueCorrectBirdsIdentifiedLong = document.getLong(IDENTIFIED_BIRDS_SUBCOLLECTION);
-                                    if (uniqueCorrectBirdsIdentifiedLong != null) {
-                                        uniqueCorrectBirdsIdentified[0] = uniqueCorrectBirdsIdentifiedLong.intValue();
-                                    } else {
-                                        Log.w(TAG, "uniqueCorrectBirdsIdentified field is null or missing in user document for UID: " + currentUser.getUid());
-                                        // Handle case where Level might be missing
-                                    }
-
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                Long quizCompletionsLong = document.getLong(KEY_QUIZ_COMPLETIONS);
+                                if (quizCompletionsLong != null) {
+                                    callback.onQuizCompletionsReceived(quizCompletionsLong.intValue());
+                                } else {
+                                    Log.w(TAG, KEY_QUIZ_COMPLETIONS + " field is null or missing for UID: " + currentUser.getUid());
+                                    callback.onQuizCompletionsReceived(0);
                                 }
-                                Log.d("FirestoreUpdate", "User uniqueCorrectBirdsIdentified updated successfully.");
-                                // Optionally, notify the user or update UI
                             } else {
-                                Log.e("FirestoreUpdate", "Error updating user uniqueCorrectBirdsIdentified: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
+                                Log.w(TAG, "User document does not exist for UID: " + currentUser.getUid());
+                                callback.onQuizCompletionsReceived(0);
                             }
+                        } else {
+                            Log.e(TAG, "Error getting " + KEY_QUIZ_COMPLETIONS + ": ", task.getException());
+                            callback.onError(task.getException());
                         }
                     });
+        } else {
+            Log.w(TAG, "Current user is null, cannot fetch " + KEY_QUIZ_COMPLETIONS);
+            callback.onError(new Exception("User not logged in"));
         }
-        return uniqueCorrectBirdsIdentified[0];
     }
-    public static void addQuizCompletions(Context context) {
 
-        setQuizCompletionsFirestore(GamificationManager.getQuizCompletions(context) + 1);
-    }
-    public static void addPerfectQuizScores(Context context) {
+    public static void getPerfectQuizScores(Context context, PerfectQuizScoresCallback callback) {
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        setPerfectQuizScoresFirestore(GamificationManager.getPerfectQuizScores(context) + 1);
+        if (currentUser != null) {
+            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                Long perfectScoresLong = document.getLong(KEY_PERFECT_QUIZ_SCORES);
+                                if (perfectScoresLong != null) {
+                                    callback.onPerfectQuizScoresReceived(perfectScoresLong.intValue());
+                                } else {
+                                    Log.w(TAG, KEY_PERFECT_QUIZ_SCORES + " field is null or missing for UID: " + currentUser.getUid());
+                                    callback.onPerfectQuizScoresReceived(0);
+                                }
+                            } else {
+                                Log.w(TAG, "User document does not exist for UID: " + currentUser.getUid());
+                                callback.onPerfectQuizScoresReceived(0);
+                            }
+                        } else {
+                            Log.e(TAG, "Error getting " + KEY_PERFECT_QUIZ_SCORES + ": ", task.getException());
+                            callback.onError(task.getException());
+                        }
+                    });
+        } else {
+            Log.w(TAG, "Current user is null, cannot fetch " + KEY_PERFECT_QUIZ_SCORES);
+            callback.onError(new Exception("User not logged in"));
+        }
     }
-    public static void addUniqueCorrectBirdsIdentified(Context context,String birdIdentifier) {
 
-        setUniqueCorrectBirdsIdentifiedFirestore(birdIdentifier);
+    public static void getUniqueCorrectBirdsIdentifiedCount(Context context, UniqueBirdsCountCallback callback) {
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser != null) {
+            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
+                    .collection(IDENTIFIED_BIRDS_SUBCOLLECTION)
+                    .whereEqualTo("correctlyIdentified", true) // Assuming you have such a field
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            QuerySnapshot querySnapshot = task.getResult();
+                            if (querySnapshot != null) {
+                                callback.onUniqueBirdsCountReceived(querySnapshot.size());
+                            } else {
+                                // This case should ideally not happen if task is successful
+                                callback.onUniqueBirdsCountReceived(0);
+                            }
+                        } else {
+                            Log.e(TAG, "Error getting unique correct birds identified count: ", task.getException());
+                            callback.onError(task.getException());
+                        }
+                    });
+        } else {
+            Log.w(TAG, "Current user is null, cannot fetch unique correct birds identified count.");
+            callback.onError(new Exception("User not logged in"));
+        }
     }
-    public static void setQuizCompletionsFirestore(int quizCompletions) {
+
+
+    // --- Methods to SET data (can also have optional callbacks) ---
+
+    public static void setQuizCompletionsFirestore(int quizCompletions, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
-                    .update("quizCompletions", quizCompletions)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("FirestoreUpdate", "User quizCompletions updated successfully.");
-                            }
-                            else {
-                                Log.e("FirestoreUpdate", "Error updating user quizCompletions: ", task.getException());
-                            }
-                    }
+                    .update(KEY_QUIZ_COMPLETIONS, quizCompletions)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "User " + KEY_QUIZ_COMPLETIONS + " updated successfully.");
+                            if (callback != null) callback.onSuccess();
+                        } else {
+                            Log.e(TAG, "Error updating user " + KEY_QUIZ_COMPLETIONS + ": ", task.getException());
+                            if (callback != null) callback.onError(task.getException());
+                        }
                     });
-
+        } else {
+            Log.w(TAG, "Current user is null. Cannot update " + KEY_QUIZ_COMPLETIONS);
+            if (callback != null) callback.onError(new Exception("User not logged in"));
         }
     }
-    public static void setUniqueCorrectBirdsIdentifiedFirestore(String uniqueCorrectBirdsIdentified ) {
+
+    public static void setUniqueCorrectBirdsIdentifiedFirestore(String uniqueCorrectBirdsIdentified, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        IdentifiedBird birdToInsert = new IdentifiedBird(true);
+        // Assuming IdentifiedBird model has a field like 'correctlyIdentified'
+        IdentifiedBird birdToInsert = new IdentifiedBird(true); // Example: true means correctly identified
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid()).collection(IDENTIFIED_BIRDS_SUBCOLLECTION)
-                    .document(uniqueCorrectBirdsIdentified).set(birdToInsert)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("FirestoreUpdate", "User uniqueCorrectBirdsIdentified updated successfully.");
-                            }
-                            else {
-                                Log.e("FirestoreUpdate", "Error updating user uniqueCorrectBirdsIdentified: ", task.getException());
-                            }
+                    .document(uniqueCorrectBirdsIdentified).set(birdToInsert) // Using bird's name/ID as document ID
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "User " + IDENTIFIED_BIRDS_SUBCOLLECTION + " updated successfully for bird: " + uniqueCorrectBirdsIdentified);
+                            if (callback != null) callback.onSuccess();
+                        } else {
+                            Log.e(TAG, "Error updating user " + IDENTIFIED_BIRDS_SUBCOLLECTION + ": ", task.getException());
+                            if (callback != null) callback.onError(task.getException());
                         }
                     });
-
+        } else {
+            Log.w(TAG, "Current user is null. Cannot update " + IDENTIFIED_BIRDS_SUBCOLLECTION);
+            if (callback != null) callback.onError(new Exception("User not logged in"));
         }
     }
-    public static void setPerfectQuizScoresFirestore(int perfectQuizScores) {
+
+    public static void setPerfectQuizScoresFirestore(int perfectQuizScores, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
-                    .update("perfectQuizScores", perfectQuizScores)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("FirestoreUpdate", "User perfectQuizScores updated successfully.");
-                            }
-                            else {
-                                Log.e("FirestoreUpdate", "Error updating user perfectQuizScores: ", task.getException());
-                            }
+                    .update(KEY_PERFECT_QUIZ_SCORES, perfectQuizScores)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "User " + KEY_PERFECT_QUIZ_SCORES + " updated successfully.");
+                            if (callback != null) callback.onSuccess();
+                        } else {
+                            Log.e(TAG, "Error updating user " + KEY_PERFECT_QUIZ_SCORES + ": ", task.getException());
+                            if (callback != null) callback.onError(task.getException());
                         }
                     });
-
+        } else {
+            Log.w(TAG, "Current user is null. Cannot update " + KEY_PERFECT_QUIZ_SCORES);
+            if (callback != null) callback.onError(new Exception("User not logged in"));
         }
     }
-    public static void addXP(Context context, int amount) {
 
-        int currentXP = GamificationManager.getUserXPFirestore(context);
-        int newXP = currentXP + amount;
-        boolean leveledUp = false;
-        Toast.makeText(context, "You gained " + amount + " XP!", Toast.LENGTH_SHORT).show();
-
-            while (newXP >= 50) {
-                setLevelFirestore(getUserLevelFirestore(context) + 1);
-                newXP -= 50;
-                leveledUp=true;
-            }
-        if(leveledUp)
-        {
-            MediaPlayer mp = MediaPlayer.create(context, R.raw.success);
-            mp.start();
-            int level = GamificationManager.getUserLevelFirestore(context);
-            Toast.makeText(context, "Level up! New level"+level, Toast.LENGTH_SHORT).show();
-        }
-
-
-        setXPFirestore(newXP);
-    }
-
-    public static int getUserXPFirestore(Context context) {
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        final int[] xp = {0};
-        if (currentUser != null) {
-            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document != null && document.exists()) {
-                                    Long xpLong = document.getLong("xp");
-                                    if (xpLong != null) {
-                                        xp[0] = xpLong.intValue();
-                                        Log.d(TAG, "User xp : " + xp[0]);
-                                    } else {
-                                        Log.w(TAG, "xp field is null or missing in user document for UID: " + currentUser.getUid());
-                                        // Handle case where Level might be missing
-                                    }
-
-                                }
-                                Log.d("FirestoreUpdate", "User xp updated successfully.");
-                                // Optionally, notify the user or update UI
-                            } else {
-                                Log.e("FirestoreUpdate", "Error updating user xp: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
-                            }
-                        }
-                    });
-        }
-        return xp[0];
-    }
-
-    public static int getUserLevelFirestore(Context context) {
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        final int[] level = {1};
-        if (currentUser != null) {
-            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document != null && document.exists()) {
-                                    Long levelLong = document.getLong("level");
-                                    if (levelLong != null) {
-                                        level[0] = levelLong.intValue();
-                                    } else {
-                                        Log.w(TAG, "Level field is null or missing in user document for UID: " + currentUser.getUid());
-                                        // Handle case where Level might be missing
-                                    }
-
-                                }
-                                Log.d("FirestoreUpdate", "User level updated successfully.");
-                                // Optionally, notify the user or update UI
-                            } else {
-                                Log.e("FirestoreUpdate", "Error updating user level: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
-                            }
-                        }
-                    });
-        }
-        return level[0];
-    }
-
-    public static void setLevelFirestore( int level) {
+    public static void setLevelFirestore(int level, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .update(KEY_LEVEL, level)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("FirestoreUpdate", "User level updated successfully.");
-                                // Optionally, notify the user or update UI
-                            } else {
-                                Log.e("FirestoreUpdate", "Error updating user level: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
-                            }
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "User level updated successfully.");
+                            if (callback != null) callback.onSuccess();
+                        } else {
+                            Log.e(TAG, "Error updating user level: ", task.getException());
+                            if (callback != null) callback.onError(task.getException());
                         }
                     });
+        } else {
+            Log.w(TAG, "Current user is null. Cannot update level.");
+            if (callback != null) callback.onError(new Exception("User not logged in"));
         }
     }
 
-    public static void setXPFirestore( int xp) {
+    public static void setXPFirestore(int xp, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if(currentUser != null) {
+        if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .update(KEY_XP, xp)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("FirestoreUpdate", "User xp updated successfully.");
-                                // Optionally, notify the user or update UI
-                            } else {
-                                Log.e("FirestoreUpdate", "Error updating user xp: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
-                            }
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "User xp updated successfully.");
+                            if (callback != null) callback.onSuccess();
+                        } else {
+                            Log.e(TAG, "Error updating user xp: ", task.getException());
+                            if (callback != null) callback.onError(task.getException());
                         }
                     });
+        } else {
+            Log.w(TAG, "Current user is null. Cannot update XP.");
+            if (callback != null) callback.onError(new Exception("User not logged in"));
         }
     }
+
+
+    // --- Main Logic Method (add) using Callbacks ---
+    /**
+     * Increments the user's quiz completions count by 1.
+     *
+     * @param context  The application context.
+     */
+    public static void addQuizCompletions(Context context) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        getQuizCompletions(context, new QuizCompletionsCallback() {
+            @Override
+            public void onQuizCompletionsReceived(int currentCompletions) {
+                int newCompletions = currentCompletions + 1;
+                setQuizCompletionsFirestore(newCompletions, new WriteOperationCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Quiz completions incremented to " + newCompletions);
+                        // You could add a Toast here if desired
+                        // Toast.makeText(context, "Quiz completed!", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e(TAG, "Failed to set new quiz completions count.", e);
+
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Failed to get current quiz completions to increment.", e);
+
+            }
+        });
+    }
+    /**
+     * Increments the user's perfect quiz scores count by 1.
+     *
+     * @param context  The application context.
+
+     */
+    public static void addPerfectQuizScores(Context context) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        getPerfectQuizScores(context, new PerfectQuizScoresCallback() {
+            @Override
+            public void onPerfectQuizScoresReceived(int currentPerfectScores) {
+                int newPerfectScores = currentPerfectScores + 1;
+                setPerfectQuizScoresFirestore(newPerfectScores, new WriteOperationCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Perfect quiz scores incremented to " + newPerfectScores);
+                        // You could add a Toast here if desired
+                        // Toast.makeText(context, "Perfect quiz score!", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e(TAG, "Failed to set new perfect quiz scores count.", e);
+
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Failed to get current perfect quiz scores to increment.", e);
+
+            }
+        });
+    }
+    /**
+     * Adds a bird to the user's list of uniquely identified correct birds.
+     * If the bird is new for the user, it also awards XP.
+     *
+     * @param context        The application context.
+     * @param birdIdentifier A unique string identifying the bird (e.g., common name, scientific name, or a unique ID).
+     *                       This will be used as the document ID in the subcollection.
+     */
+    public static void addUniqueCorrectBirdsIdentified(Context context, String birdIdentifier) {
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                // If not already identified, then add it
+                FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+                // Assuming IdentifiedBird model has a field like 'correctlyIdentified' and a timestamp
+                IdentifiedBird birdData = new IdentifiedBird(true); // true for correctlyIdentified
+                // You could add more data to IdentifiedBird, like a timestamp:
+                // birdData.setTimestamp(System.currentTimeMillis());
+                firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
+                        .collection(IDENTIFIED_BIRDS_SUBCOLLECTION).document(birdIdentifier)
+                        .set(birdData)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Log.d(TAG, "Bird '" + birdIdentifier + "' added to " + IDENTIFIED_BIRDS_SUBCOLLECTION + " for user " + currentUser.getUid());
+                                Toast.makeText(context, birdIdentifier + " added to your identified list!", Toast.LENGTH_SHORT).show();
+
+                            } else {
+                                Log.e(TAG, "Error adding bird '" + birdIdentifier + "' to " + IDENTIFIED_BIRDS_SUBCOLLECTION + ": ", task.getException());
+
+                            }
+                        });
+
+    }
+    public static void addXP(Context context, int amount) {
+        getUserXP(context, new XpCallback() {
+            @Override
+            public void onXpReceived(int currentXP) {
+                int newXP = currentXP + amount;
+                final boolean[] leveledUp = {false}; // Use array to modify in inner class
+
+                Toast.makeText(context, "You gained " + amount + " XP!", Toast.LENGTH_SHORT).show();
+
+                getUserLevel(context, new LevelCallback() {
+                    @Override
+                    public void onLevelReceived(int currentLevel) {
+                        int newLevel = currentLevel;
+                        int tempNewXP = newXP; // Use a temporary variable for XP calculation during leveling
+
+                        while (tempNewXP >= 50) { // Assuming 50 XP per level
+                            newLevel++;
+                            tempNewXP -= 50;
+                            leveledUp[0] = true;
+                        }
+
+                        final int finalNewXP = tempNewXP; // XP after leveling
+                        final int finalNewLevel = newLevel;
+
+                        if (leveledUp[0]) {
+                            setLevelFirestore(finalNewLevel, new WriteOperationCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    MediaPlayer mp = MediaPlayer.create(context, R.raw.success);
+                                    mp.setOnCompletionListener(MediaPlayer::release); // Release when done
+                                    mp.start();
+                                    Toast.makeText(context, "Level up! New level " + finalNewLevel, Toast.LENGTH_SHORT).show();
+                                    // Now set the final XP after level up
+                                    setXPFirestore(finalNewXP, new WriteOperationCallback() {
+                                        @Override
+                                        public void onSuccess() {
+                                            Log.d(TAG, "XP updated successfully after level up.");
+                                        }
+
+                                        @Override
+                                        public void onError(Exception e) {
+                                            Log.e(TAG, "Error setting XP after level up.", e);
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onError(Exception e) {
+                                    Log.e(TAG, "Error setting level.", e);
+                                    // Still try to set XP even if level setting failed
+                                    setXPFirestore(finalNewXP, null); // Or handle error more gracefully
+                                }
+                            });
+                        } else {
+                            // No level up, just set the new XP
+                            setXPFirestore(finalNewXP, new WriteOperationCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    Log.d(TAG, "XP updated successfully.");
+                                }
+
+                                @Override
+                                public void onError(Exception e) {
+                                    Log.e(TAG, "Error setting XP.", e);
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e(TAG, "Error getting user level for addXP: ", e);
+                        Toast.makeText(context, "Could not update level. Please try again.", Toast.LENGTH_SHORT).show();
+                        // Fallback: Still try to update XP if level fetch failed
+                        setXPFirestore(newXP, null); // newXP here is before level calculation
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Error getting user XP for addXP: ", e);
+                Toast.makeText(context, "Could not update XP. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+
     /**
      * Interface for callback to receive the result of the check.
      */
@@ -524,5 +715,4 @@ public class GamificationManager {
     public boolean isUserLoaded() {
         return userLoaded;
     }
-
 }
