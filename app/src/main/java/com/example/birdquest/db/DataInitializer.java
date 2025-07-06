@@ -78,6 +78,7 @@ public class DataInitializer {
                     String latinName = birdNameJson.optString("latin_name", null);
                     String siteUrl = null;
                     String imageUrl = null;
+                    String soundUrl = null;
                     if (commonName == null || commonName.trim().isEmpty()) {
                         Log.w(TAG, "Skipping bird with missing or empty common_name at index " + i + " in " + BIRD_NAMES_FILE);
                         continue;
@@ -93,9 +94,11 @@ public class DataInitializer {
                         }
                     }
                     if (siteUrl != null) {
-                        imageUrl = BirdDataExtractor.extractMatchingDataUrl(siteUrl, latinName);
+                        ArrayList<String> dataUrls = BirdDataExtractor.extractMatchingDataUrl(siteUrl, latinName);
+                        imageUrl = dataUrls.get(0);
+                        soundUrl = dataUrls.get(1);
                     }
-                    Bird bird = new Bird(commonName, latinName, siteUrl,imageUrl);
+                    Bird bird = new Bird(commonName, latinName, siteUrl,imageUrl,soundUrl);
                     birdsToInsert.add(bird);
                 }
 

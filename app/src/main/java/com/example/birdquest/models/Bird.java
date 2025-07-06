@@ -43,10 +43,10 @@ public class Bird {
         this.siteUrl = siteUrl;
         this.imageUrl = imageUrl;
     }
-    public Bird(String commonName, String latinName, String sireUrl) {
+    public Bird(String commonName, String latinName, String siteUrl) {
         this.commonName = commonName;
         this.latinName = latinName;
-        this.siteUrl = sireUrl;
+        this.siteUrl = siteUrl;
         this.imageUrl = null;
     }
 

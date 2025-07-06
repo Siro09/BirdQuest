@@ -6,6 +6,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +18,7 @@ public class BirdDataExtractor {
     private static final String TAG = "DataExtractor";
 
     // Call this method from a background thread (e.g., using AsyncTask, Coroutines, ExecutorService)
-    public static String extractMatchingDataUrl(String speciesUrl, String latinName) {
+    public static ArrayList<String> extractMatchingDataUrl(String speciesUrl, String latinName) {
         if (speciesUrl == null || speciesUrl.isEmpty() || latinName == null || latinName.isEmpty()) {
             Log.e(TAG, "Species URL or Latin name is null or empty.");
             return null;
@@ -29,6 +30,7 @@ public class BirdDataExtractor {
             return null; // Expecting at least two parts like "Genus species"
         }
 
+        ArrayList<String> dataUrls = new ArrayList<>();
         // Construct the search pattern based on the first 3 letters of the first two parts
         // e.g., "Microcarbo pygmaeus" -> "mic" and "pyg"
         String part1Prefix = latinParts[0].length() >= 3 ? latinParts[0].substring(0, 3) : latinParts[0];
@@ -38,12 +40,15 @@ public class BirdDataExtractor {
         // It's a bit loose to account for variations like hyphens or underscores.
         // Example: /mic.*pyg.*\.jpg (or .png, .jpeg etc.)
         // We will refine this by checking the domain as well.
-        String searchPatternInPath = ".*" + Pattern.quote(part1Prefix) + ".*" + Pattern.quote(part2Prefix) + ".*\\.(jpg|jpeg|png|gif)";
-        Pattern pattern = Pattern.compile(searchPatternInPath, Pattern.CASE_INSENSITIVE);
+        String searchPatternInPathImg = ".*" + Pattern.quote(part1Prefix) + ".*" + Pattern.quote(part2Prefix) + ".*\\.(jpg|jpeg|png|gif)";
+        Pattern patternImg = Pattern.compile(searchPatternInPathImg, Pattern.CASE_INSENSITIVE);
+
+        String searchPatternInPathAudio = ".*" + Pattern.quote(part1Prefix) + ".*" + Pattern.quote(part2Prefix) + ".*\\.(mp3|wav)";
+        Pattern patternAudio = Pattern.compile(searchPatternInPathAudio, Pattern.CASE_INSENSITIVE);
 
         Log.d(TAG, "Attempting to fetch URL: " + speciesUrl);
         Log.d(TAG, "Latin Name: " + latinName + ", Part1 Prefix: " + part1Prefix + ", Part2 Prefix: " + part2Prefix);
-        Log.d(TAG, "Search pattern for path: " + searchPatternInPath);
+        Log.d(TAG, "Search pattern for path: " + searchPatternInPathImg);
 
 
         try {
@@ -56,6 +61,7 @@ public class BirdDataExtractor {
 
             // 2. Parse the HTML to find <img> tags
             Elements imgTags = doc.select("img[src]"); // Select all img tags with an src attribute
+            Elements audioTags = doc.select("audio > source[src]"); // Select all audio tags with an src attribute
 
             Log.d(TAG, "Found " + imgTags.size() + " img tags.");
 
@@ -76,15 +82,49 @@ public class BirdDataExtractor {
                 }
 
                 // Check if the path part of the URL matches our pattern
-                Matcher matcher = pattern.matcher(imgSrc);
+                Matcher matcher = patternImg.matcher(imgSrc);
                 if (matcher.find()) {
                     Log.i(TAG, "MATCH FOUND: " + imgSrc);
-                    return imgSrc; // Return the first match
+                    dataUrls.add(imgSrc);
+                    break; // Return the first match
                 }
             }
+            if (dataUrls.isEmpty()) {
+                dataUrls.add(null);
+                Log.w(TAG, "No matching image found for pattern on URL: " + speciesUrl);
+            }
+            Log.d(TAG, "Found image URLs: " + dataUrls.get(0));
 
-            Log.w(TAG, "No matching image found for pattern on URL: " + speciesUrl);
-            return null; // No matching image found
+            for (Element audioTag : audioTags) {
+                String audioSrc = audioTag.attr("abs:src"); // Get absolute URL for the audio source
+                // "abs:src" resolves relative URLs against the base URI of the document.
+
+                if (audioSrc == null || audioSrc.isEmpty()) {
+                    continue;
+                }
+
+                Log.d(TAG, "Checking sound src: " + audioSrc);
+
+
+                if (!audioSrc.toLowerCase(Locale.ROOT).startsWith("https://pasaridinromania.sor.ro/")) {
+                    Log.d(TAG, "Skipping audio from different domain: " + audioSrc);
+                    continue;
+                }
+
+                // Check if the path part of the URL matches our pattern
+                Matcher matcher = patternAudio.matcher(audioSrc);
+                if (matcher.find()) {
+                    Log.i(TAG, "MATCH FOUND: " + audioSrc);
+                    dataUrls.add(audioSrc);
+                    break; // Return the first match
+                }
+            }
+            if (dataUrls.size()==1) {
+                dataUrls.add(null);
+                Log.w(TAG, "No matching audio found for pattern on URL: " + speciesUrl);
+            }
+            Log.d(TAG, "Found audio URLs: " + dataUrls.get(1));
+            return dataUrls;
 
         } catch (IOException e) {
             Log.e(TAG, "Error fetching or parsing URL " + speciesUrl + ": " + e.getMessage());
