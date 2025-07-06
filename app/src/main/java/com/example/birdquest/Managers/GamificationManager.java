@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,22 @@ public class GamificationManager {
     }
     public int getLevel() {
         return user.getLevel();
+    }
+    public String getUserEmail()
+    {
+        return user.getEmail();
+    }
+    public int getUserQuizCompletions()
+    {
+        return user.getQuizCompletions();
+    }
+    public int getUserPerfectQuizScores()
+    {
+        return user.getPerfectQuizScores();
+    }
+    public int getUserUniqueCorrectBirdsIdentified()
+    {
+        return user.getUniqueCorrectBirdsCount();
     }
     public static int getQuizCompletions(Context context) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
@@ -442,17 +459,38 @@ public class GamificationManager {
                                 DocumentSnapshot document = task.getResult();
                                 if (document != null && document.exists()) {
                                     user = document.toObject(User.class);
+
                                 }
                                 Log.d("FirestoreUpdate", "User level updated successfully.");
-                                notifyUserLoaded();
+
                                 // Optionally, notify the user or update UI
                             } else {
                                 Log.e("FirestoreUpdate", "Error updating user level: ", task.getException());
                                 // Optionally, show an error message to the user
                                 // Consider retry logic if appropriate
+                                userLoaded = false;
                                 notifyUserLoadFailed();
                             }
                         }
+                    });
+            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid()).collection(KEY_UNIQUE_CORRECT_BIRDS_IDENTIFIED)
+                    .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            QuerySnapshot identifiedBirdsSnapshot = task.getResult();
+
+                            ArrayList<IdentifiedBird> birdsIdentified =new ArrayList<>();
+                            assert identifiedBirdsSnapshot != null;
+                            for (DocumentSnapshot doc : identifiedBirdsSnapshot.getDocuments()) {
+                                IdentifiedBird bird = doc.toObject(IdentifiedBird.class);
+                                birdsIdentified.add(bird);
+                            }
+                            user.setUniqueCorrectBirdsIdentified(birdsIdentified); // Assuming User.java has this setter
+                            userLoaded = true;
+                            notifyUserLoaded();
+                            Log.d(TAG, "User " +  " has identified " + birdsIdentified.size() + " unique birds.");
+                        }
+
                     });
         }
 

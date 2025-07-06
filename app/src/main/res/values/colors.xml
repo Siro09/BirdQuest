@@ -5,4 +5,17 @@
     <color name="purple_500">#91069D</color>
     <color name="correct_answer_green">#4DE805</color>
     <color name="incorrect_answer_red">#D71508</color>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="grey_100">#F5F5F5</color>
+    <color name="grey_300">#E0E0E0</color>
+    <color name="text_primary">#DD000000</color> <!-- 87% black -->
+    <color name="text_secondary">#8A000000</color> <!-- 54% black -->
+    <color name="gold_star">#FFD700</color>
+    <!-- Light Theme Specific Colors -->
+    <color name="surface_container">#F0F0F0</color> <!-- Example: A light grey -->
+    <color name="on_surface">#1C1B1F</color>       <!-- Example: Dark text on light surface -->
+    <color name="on_surface_variant">#49454F</color> <!-- Example: Secondary text color -->
+    <color name="outline">#79747E</color>           <!-- Example: For dividers -->
 </resources>

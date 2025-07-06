@@ -14,6 +14,13 @@
       "criteriaType": "UNIQUE_BIRDS_IDENTIFIED",
       "criteriaValue": 5
     },
+    "bird_spotter_intermediate": {
+      "name": "Bird Spotter Intermediate",
+      "description": "Correctly identify 25 different birds.",
+      "xpReward": 30,
+      "criteriaType": "UNIQUE_BIRDS_IDENTIFIED",
+      "criteriaValue": 25
+    },
     "perfect_quiz_ace": {
       "name": "Quiz Ace",
         "description": "Get a perfect score on any quiz.",

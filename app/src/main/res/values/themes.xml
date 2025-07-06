@@ -1,9 +1,38 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.BirdQuest" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Theme.BirdQuest" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/purple_500</item>
+
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+        <!-- Custom theme attributes -->
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorOutline">@color/outline</item>
+
+        <!-- For MaterialCardView background -->
+        <item name="materialCardViewStyle">@style/Widget.App.MaterialCardView</item>
     </style>
 
-    <style name="Theme.BirdQuest" parent="Base.Theme.BirdQuest" />
+    <!-- Style for MaterialCardView to use theme attributes for background -->
+    <style name="Widget.App.MaterialCardView" parent="Widget.MaterialComponents.CardView">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Card</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Card" parent="">
+        <!-- This ensures cards use a surface color that contrasts with the main background -->
+        <!-- By default, MaterialCardView uses colorSurface. If your colorSurfaceContainer
+             is the main background, cards should use a slightly different surface or
+             rely on their default behavior which is usually good.
+             If you want cards to have a specific background distinct from the main window background:
+        <item name="colorSurface">@color/white</item> Or another light card background
+        -->
+    </style>
 </resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Specific Colors -->
+    <!-- Define dark theme equivalents for your theme attributes -->
+    <color name="surface_container">#2C2C2E</color> <!-- Example: A dark grey -->
+    <color name="on_surface">#E6E1E5</color>        <!-- Example: Light text on dark surface -->
+    <color name="on_surface_variant">#CAC4D0</color>  <!-- Example: Secondary light text -->
+    <color name="outline">#938F99</color>            <!-- Example: For dividers in dark mode -->
+
+    <!-- You might not need to redefine greys if they are only used in light theme
+         or if you want them to be consistent.
+         However, for text_primary and text_secondary, you definitely need dark theme versions
+         if you continue to use them directly. It's better to switch to theme attributes. -->
+    <color name="text_primary">#FFFFFFFF</color> <!-- Full white for primary text in dark -->
+    <color name="text_secondary">#B3FFFFFF</color><!-- 70% white for secondary text -->
+</resources>

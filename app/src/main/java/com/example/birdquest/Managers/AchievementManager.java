@@ -224,7 +224,7 @@ public class AchievementManager {
 
                             if (criteriaMet) {
                                 Log.i(TAG, "User '" + userId + "' met criteria for achievement: " + definition.getName());
-                                awardAchievement(batch, userId, definition); // awardAchievement uses AchievementDefinition
+                                awardAchievement(batch, userId, new Achievement(definition, new Date())); // awardAchievement uses AchievementDefinition
                                 newAchievementAwarded = true;
                                 totalXpFromNewAchievements += definition.getXpReward();
                             }
