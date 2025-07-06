@@ -1,5 +1,6 @@
 package com.example.birdquest;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.birdquest.Managers.AchievementManager;
 import com.example.birdquest.Managers.GamificationManager;
 import com.example.birdquest.adapters.AchievementAdapter;
+import com.example.birdquest.models.Achievement;
+
+import java.util.List;
 
 public class GamificationActivity extends AppCompatActivity implements AchievementManager.DefinitionsLoadedListener, GamificationManager.UserLoadedListener {
     private static final String TAG = "GamificationActivity";
@@ -95,7 +99,14 @@ public class GamificationActivity extends AppCompatActivity implements Achieveme
             int perfectQuizScores = gamificationManager.getUserPerfectQuizScores();
             int uniqueCorrectBirdsIdentified = gamificationManager.getUserUniqueCorrectBirdsIdentified();
             String userEmail = gamificationManager.getUserEmail();
-
+            achievementAdapter = new AchievementAdapter(this, (List<Achievement>) gamificationManager.getUserAchievements());
+            rvAchievements.setAdapter(achievementAdapter);
+            if (achievementAdapter.getItemCount() == 0) {
+                tvNoAchievements.setVisibility(View.VISIBLE);
+            } else {
+                tvNoAchievements.setVisibility(View.GONE);
+                rvAchievements.setVisibility(View.VISIBLE);
+            }
             tvXp.setText( String.valueOf(xp));
             tvLevel.setText(String.valueOf(level));
             tvQuizCompletions.setText(String.valueOf(quizCompletions));

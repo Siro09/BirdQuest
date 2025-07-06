@@ -8,10 +8,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.example.birdquest.R;
+import com.example.birdquest.models.Achievement;
 import com.example.birdquest.models.IdentifiedBird;
 import com.example.birdquest.models.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -20,18 +22,20 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public class GamificationManager {
     private static final String TAG = "GamificationManager";
     private static final String USERS_COLLECTION = "users";
+    private static final String UNLOCKED_ACHIEVEMENTS_SUBCOLLECTION = "unlockedAchievements";
     private static final String PREFS_NAME = "GamificationPrefs";
     private static final String KEY_XP = "xp";
     private static final String KEY_LEVEL = "level";
     private static final String KEY_QUIZ_COMPLETIONS = "quizCompletions";
     private static final String KEY_PERFECT_QUIZ_SCORES = "perfectQuizScores";
-    private static final String KEY_UNIQUE_CORRECT_BIRDS_IDENTIFIED = "uniqueCorrectBirdsIdentified";
+    private static final String IDENTIFIED_BIRDS_SUBCOLLECTION = "uniqueCorrectBirdsIdentified";
 
     private User user; // Cache
 
@@ -58,6 +62,10 @@ public class GamificationManager {
     public int getUserUniqueCorrectBirdsIdentified()
     {
         return user.getUniqueCorrectBirdsCount();
+    }
+    public Collection<Achievement> getUserAchievements()
+    {
+        return  user.getAchievements();
     }
     public static int getQuizCompletions(Context context) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
@@ -141,7 +149,7 @@ public class GamificationManager {
                             if (task.isSuccessful()) {
                                 DocumentSnapshot document = task.getResult();
                                 if (document != null && document.exists()) {
-                                    Long uniqueCorrectBirdsIdentifiedLong = document.getLong(KEY_UNIQUE_CORRECT_BIRDS_IDENTIFIED);
+                                    Long uniqueCorrectBirdsIdentifiedLong = document.getLong(IDENTIFIED_BIRDS_SUBCOLLECTION);
                                     if (uniqueCorrectBirdsIdentifiedLong != null) {
                                         uniqueCorrectBirdsIdentified[0] = uniqueCorrectBirdsIdentifiedLong.intValue();
                                     } else {
@@ -199,7 +207,7 @@ public class GamificationManager {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         IdentifiedBird birdToInsert = new IdentifiedBird(true);
         if (currentUser != null) {
-            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid()).collection(KEY_UNIQUE_CORRECT_BIRDS_IDENTIFIED)
+            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid()).collection(IDENTIFIED_BIRDS_SUBCOLLECTION)
                     .document(uniqueCorrectBirdsIdentified).set(birdToInsert)
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -262,7 +270,7 @@ public class GamificationManager {
     public static int getUserXPFirestore(Context context) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        final int[] xp = {1};
+        final int[] xp = {0};
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .get()
@@ -275,6 +283,7 @@ public class GamificationManager {
                                     Long xpLong = document.getLong("xp");
                                     if (xpLong != null) {
                                         xp[0] = xpLong.intValue();
+                                        Log.d(TAG, "User xp : " + xp[0]);
                                     } else {
                                         Log.w(TAG, "xp field is null or missing in user document for UID: " + currentUser.getUid());
                                         // Handle case where Level might be missing
@@ -410,7 +419,7 @@ public class GamificationManager {
                     DocumentSnapshot document = task.getResult();
                     if (document != null && document.exists()) {
                         // Option 1: Directly access the map field if your User model isn't strictly needed here
-                        Map<String, Object> uniqueBirdsMap = (Map<String, Object>) document.get(KEY_UNIQUE_CORRECT_BIRDS_IDENTIFIED);
+                        Map<String, Object> uniqueBirdsMap = (Map<String, Object>) document.get(IDENTIFIED_BIRDS_SUBCOLLECTION);
                         if (uniqueBirdsMap != null && uniqueBirdsMap.containsKey(birdIdentifier)) {
                             listener.onResult(true, false); // Bird was identified before
                         } else {
@@ -448,50 +457,53 @@ public class GamificationManager {
     public void loadUser() {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String userUid="";
+        if (currentUser != null) {
+            userUid = currentUser.getUid();
+        }
+        // Task to get user
+        Task<DocumentSnapshot> userTask = firebaseFirestore.collection(USERS_COLLECTION).document(userUid).get();
+        // Task to get already unlocked achievements
+        Task<QuerySnapshot> unlockedAchievementsTask = firebaseFirestore.collection(USERS_COLLECTION).document(userUid)
+                .collection(UNLOCKED_ACHIEVEMENTS_SUBCOLLECTION).get();
+
+        // Task to get the count of identified birds
+        Task<QuerySnapshot> identifiedBirdsTask = firebaseFirestore.collection(USERS_COLLECTION).document(userUid)
+                .collection(IDENTIFIED_BIRDS_SUBCOLLECTION).get(); // This gets all documents
 
         if (currentUser != null) {
-            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document != null && document.exists()) {
-                                    user = document.toObject(User.class);
-
-                                }
-                                Log.d("FirestoreUpdate", "User level updated successfully.");
-
-                                // Optionally, notify the user or update UI
-                            } else {
-                                Log.e("FirestoreUpdate", "Error updating user level: ", task.getException());
-                                // Optionally, show an error message to the user
-                                // Consider retry logic if appropriate
-                                userLoaded = false;
-                                notifyUserLoadFailed();
+            String finalUserUid = userUid;
+            Tasks.whenAllSuccess(userTask,unlockedAchievementsTask, identifiedBirdsTask)
+                    .addOnSuccessListener(results -> {
+                        DocumentSnapshot userDocument = (DocumentSnapshot) results.get(0);
+                        QuerySnapshot unlockedAchievementsSnapshot = (QuerySnapshot) results.get(1);
+                        QuerySnapshot identifiedBirdsSnapshot = (QuerySnapshot) results.get(2);
+                        if(userDocument!=null)
+                        {
+                            user = userDocument.toObject(User.class);
+                        }
+                        ArrayList<Achievement> unlockedAchievements = new ArrayList<>();
+                        if (unlockedAchievementsSnapshot != null) {
+                            for (DocumentSnapshot doc : unlockedAchievementsSnapshot.getDocuments()) {
+                                Achievement achievement = doc.toObject(Achievement.class);
+                                unlockedAchievements.add(achievement);
                             }
                         }
-                    });
-            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid()).collection(KEY_UNIQUE_CORRECT_BIRDS_IDENTIFIED)
-                    .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            QuerySnapshot identifiedBirdsSnapshot = task.getResult();
+                        user.setAchievements(unlockedAchievements);
 
-                            ArrayList<IdentifiedBird> birdsIdentified =new ArrayList<>();
-                            assert identifiedBirdsSnapshot != null;
-                            for (DocumentSnapshot doc : identifiedBirdsSnapshot.getDocuments()) {
-                                IdentifiedBird bird = doc.toObject(IdentifiedBird.class);
-                                birdsIdentified.add(bird);
-                            }
-                            user.setUniqueCorrectBirdsIdentified(birdsIdentified); // Assuming User.java has this setter
-                            userLoaded = true;
-                            notifyUserLoaded();
-                            Log.d(TAG, "User " +  " has identified " + birdsIdentified.size() + " unique birds.");
+                        ArrayList<IdentifiedBird> birdsIdentified =new ArrayList<>();
+                        assert identifiedBirdsSnapshot != null;
+                        for (DocumentSnapshot doc : identifiedBirdsSnapshot.getDocuments()) {
+                            IdentifiedBird bird = doc.toObject(IdentifiedBird.class);
+                            birdsIdentified.add(bird);
                         }
+                        user.setUniqueCorrectBirdsIdentified(birdsIdentified);
+                        userLoaded = true;
+                        notifyUserLoaded();
 
-                    });
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to get user for UID: " + finalUserUid, e);
+                    });;
         }
 
     }

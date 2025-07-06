@@ -14,6 +14,13 @@
       "criteriaType": "UNIQUE_BIRDS_IDENTIFIED",
       "criteriaValue": 5
     },
+    "bird_spotter_amateur": {
+      "name": "Bird Spotter Amateur",
+      "description": "Correctly identify 10 different birds.",
+      "xpReward": 10,
+      "criteriaType": "UNIQUE_BIRDS_IDENTIFIED",
+      "criteriaValue": 10
+    },
     "bird_spotter_intermediate": {
       "name": "Bird Spotter Intermediate",
       "description": "Correctly identify 25 different birds.",
