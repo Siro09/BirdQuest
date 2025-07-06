@@ -24,6 +24,8 @@
         <activity android:name=".GamificationActivity" />
         <activity android:name=".BirdDexActivity" />
         <activity android:name=".quiz.QuizActivity" />
+        <activity android:name=".AddBirdActivity"
+            android:label="Add New Bird"/>
     </application>
 
 </manifest>

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.birdquest.models.Bird; // Your Bird model
-import com.example.birdquest.utils.BirdImageExtractor;
+import com.example.birdquest.utils.BirdDataExtractor;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -93,7 +93,7 @@ public class DataInitializer {
                         }
                     }
                     if (siteUrl != null) {
-                        imageUrl = BirdImageExtractor.extractMatchingImageUrl(siteUrl, latinName);
+                        imageUrl = BirdDataExtractor.extractMatchingDataUrl(siteUrl, latinName);
                     }
                     Bird bird = new Bird(commonName, latinName, siteUrl,imageUrl);
                     birdsToInsert.add(bird);

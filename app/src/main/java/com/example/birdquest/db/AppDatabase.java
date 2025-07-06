@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.example.birdquest.models.Bird;
 
-@Database(entities = {Bird.class}, version = 5, exportSchema = false) // Increment version number!
+@Database(entities = {Bird.class}, version = 6, exportSchema = false) // Increment version number!
 public abstract class AppDatabase extends RoomDatabase {
 
     private static final String TAG = "AppDatabase";
@@ -20,15 +20,15 @@ public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
     private static Context applicationContext;
-    /*static final Migration MIGRATION_3_4 = new Migration(3, 4) { // Assuming previous was 3
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) { // Assuming previous was 3
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
 
-            database.execSQL("ALTER TABLE birds ADD COLUMN image_url TEXT");
-           1
-            Log.i(TAG, "Migration from version 3 to 4 (added image column) executed.");
+            database.execSQL("ALTER TABLE birds ADD COLUMN sound_url TEXT");
+
+            Log.i(TAG, "Migration from version 5 to 6 (added image column) executed.");
         }
-    };*/
+    };
     public static AppDatabase getInstance(final Context context) {
         if (applicationContext == null) {
             applicationContext = context.getApplicationContext();
@@ -41,7 +41,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(applicationContext,
                                     AppDatabase.class, "bird_database") // Your database name
                             .fallbackToDestructiveMigration()
-                            //.addMigrations(MIGRATION_3_4)
+                            .addMigrations(MIGRATION_5_6)
                             .addCallback(sRoomDatabaseCallback)
                             .build();
                 }

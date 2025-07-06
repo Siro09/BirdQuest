@@ -13,7 +13,7 @@ import com.google.firebase.auth.FirebaseAuth; // Import FirebaseAuth
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnQuiz, btnBirdDex, btnGamification;
+    private Button btnQuiz, btnBirdDex, btnGamification,btnAddBird;
     private Button btnLogout; // Declare btnLogout here
     private FirebaseAuth mAuth; // Declare FirebaseAuth instance
 
@@ -29,7 +29,15 @@ public class MainActivity extends AppCompatActivity {
         btnBirdDex = findViewById(R.id.btnBirdDex);
         btnGamification = findViewById(R.id.btnGamification);
         btnLogout = findViewById(R.id.btnLogout); // Initialize btnLogout
+        btnAddBird = findViewById(R.id.btnAddBird);
 
+        btnAddBird.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, AddBirdActivity.class);
+                startActivity(intent);
+            }
+        });
         btnQuiz.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

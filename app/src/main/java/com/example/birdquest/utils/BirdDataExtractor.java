@@ -12,12 +12,12 @@ import java.util.regex.Pattern;
 import android.util.Log;
 
 
-public class BirdImageExtractor {
+public class BirdDataExtractor {
 
-    private static final String TAG = "ImageExtractor";
+    private static final String TAG = "DataExtractor";
 
     // Call this method from a background thread (e.g., using AsyncTask, Coroutines, ExecutorService)
-    public static String extractMatchingImageUrl(String speciesUrl, String latinName) {
+    public static String extractMatchingDataUrl(String speciesUrl, String latinName) {
         if (speciesUrl == null || speciesUrl.isEmpty() || latinName == null || latinName.isEmpty()) {
             Log.e(TAG, "Species URL or Latin name is null or empty.");
             return null;

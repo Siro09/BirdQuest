@@ -23,6 +23,8 @@ public interface BirdDao {
     void delete(Bird bird);
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertAll(List<Bird> birds);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertBird(Bird bird);
 
     @Query("SELECT * FROM birds")
     LiveData<List<Bird>> getAllBirds(); // Example: Get all birds as LiveData

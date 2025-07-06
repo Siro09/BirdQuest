@@ -9,4 +9,5 @@
     <string name="progress">Progress</string>
     <string name="logout">Logout</string>
     <string name="birdquest">BirdQuest</string>
+    <string name="addbird">Add Bird</string>
 </resources>

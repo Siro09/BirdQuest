@@ -26,12 +26,21 @@ public class Bird {
 
     @ColumnInfo(name = "image_url")
     public String imageUrl; // We can populate this later or make it nullable
+    @ColumnInfo(name = "sound_url")
+    public String soundUrl; // We can populate this later or make it nullable
 
     // Constructors
-    public Bird(String commonName, String latinName, String sireUrl, String imageUrl) {
+    public Bird(String commonName, String latinName, String siteUrl, String imageUrl,String soundUrl) {
         this.commonName = commonName;
         this.latinName = latinName;
-        this.siteUrl = sireUrl;
+        this.siteUrl = siteUrl;
+        this.imageUrl = imageUrl;
+        this.soundUrl = soundUrl;
+    }
+    public Bird(String commonName, String latinName, String siteUrl, String imageUrl) {
+        this.commonName = commonName;
+        this.latinName = latinName;
+        this.siteUrl = siteUrl;
         this.imageUrl = imageUrl;
     }
     public Bird(String commonName, String latinName, String sireUrl) {
