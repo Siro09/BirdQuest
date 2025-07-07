@@ -3,10 +3,12 @@ package com.example.birdquest;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,6 +39,7 @@ public class GamificationActivity extends AppCompatActivity implements Achieveme
         // Initialize Views
         toolbar = findViewById(R.id.toolbarGamification);
         setSupportActionBar(toolbar);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true); // For back button
             getSupportActionBar().setTitle("Your Progress"); // Set a title
@@ -65,6 +68,16 @@ public class GamificationActivity extends AppCompatActivity implements Achieveme
             gamificationManager.loadUser();
         }
 
+    }
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if (item.getItemId() == android.R.id.home) {
+
+            finish(); // Closes the current activity and returns to the previous one.
+            return true; // Event handled
+        }
+        return super.onOptionsItemSelected(item);
     }
     @Override
     public void onDefinitionsLoaded() {
