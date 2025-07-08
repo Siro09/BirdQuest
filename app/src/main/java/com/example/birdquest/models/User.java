@@ -14,6 +14,7 @@ public class User {
     // Counters for achievement tracking
     private int quizCompletions;
     private int perfectQuizScores;
+    private int uniqueCorrectBirdsIdentifiedCount;
     @Exclude
     private Collection<IdentifiedBird> uniqueCorrectBirdsIdentified; // Map of birdId to true
     @Exclude
@@ -31,6 +32,17 @@ public class User {
         this.level = level;
         this.quizCompletions = 0;
         this.perfectQuizScores = 0;
+        this.uniqueCorrectBirdsIdentifiedCount = 0;
+        this.uniqueCorrectBirdsIdentified =  new ArrayList<>();
+        this.achievements = new ArrayList<Achievement>();
+    }
+    public User(String email, int xp, int level, int quizCompletions, int perfectQuizScores,int uniqueCorrectBirdsIdentifiedCount) {
+        this.email = email;
+        this.xp = xp;
+        this.level = level;
+        this.quizCompletions = quizCompletions;
+        this.perfectQuizScores = perfectQuizScores;
+        this.uniqueCorrectBirdsIdentifiedCount = uniqueCorrectBirdsIdentifiedCount;
         this.uniqueCorrectBirdsIdentified =  new ArrayList<>();
         this.achievements = new ArrayList<Achievement>();
     }
@@ -88,6 +100,14 @@ public class User {
 
     public void setAchievements(Collection<Achievement> achievements) {
         this.achievements = achievements;
+    }
+
+    public int getUniqueCorrectBirdsIdentifiedCount() {
+        return uniqueCorrectBirdsIdentifiedCount;
+    }
+
+    public void setUniqueCorrectBirdsIdentifiedCount(int uniqueCorrectBirdsIdentifiedCount) {
+        this.uniqueCorrectBirdsIdentifiedCount = uniqueCorrectBirdsIdentifiedCount;
     }
 
     @Override

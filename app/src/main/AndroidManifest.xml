@@ -22,6 +22,7 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".GamificationActivity" />
+        <activity android:name=".LeaderboardActivity" />
         <activity android:name=".BirdDexActivity" />
         <activity android:name=".quiz.QuizActivity" />
         <activity android:name=".AddBirdActivity"

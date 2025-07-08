@@ -9,13 +9,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer; // Import Observer
-import androidx.lifecycle.ViewModelProvider; // Import ViewModelProvider for a more robust approach (optional but good)
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.birdquest.adapters.BirdAdapter;
 import com.example.birdquest.db.AppDatabase; // Your AppDatabase
-import com.example.birdquest.db.BirdDao;   // Your BirdDao
 import com.example.birdquest.models.Bird;   // Your Bird model
 
 import java.util.List;

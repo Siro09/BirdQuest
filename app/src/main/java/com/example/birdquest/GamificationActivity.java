@@ -1,10 +1,11 @@
 package com.example.birdquest;
 
-import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ public class GamificationActivity extends AppCompatActivity implements Achieveme
     private RecyclerView rvAchievements;
     private TextView tvNoAchievements;
     private Toolbar toolbar;
+    private Button btnGoToLeaderboard;
     private View loadingIndicator;
     private AchievementAdapter achievementAdapter;
     private AchievementManager achievementManager;
@@ -53,7 +55,7 @@ public class GamificationActivity extends AppCompatActivity implements Achieveme
         tvBirdsIdentified = findViewById(R.id.tvBirdsIdentified);
         rvAchievements = findViewById(R.id.rvAchievements);
         tvNoAchievements = findViewById(R.id.tvNoAchievements);
-
+        btnGoToLeaderboard = findViewById(R.id.btnGoToLeaderboard);
 
 
         achievementManager = new AchievementManager(this);
@@ -67,6 +69,13 @@ public class GamificationActivity extends AppCompatActivity implements Achieveme
         if (!gamificationManager.isUserLoaded()) {
             gamificationManager.loadUser();
         }
+        btnGoToLeaderboard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(GamificationActivity.this, LeaderboardActivity.class);
+                startActivity(intent);
+            }
+        });
 
     }
     @Override

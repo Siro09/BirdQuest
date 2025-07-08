@@ -5,8 +5,6 @@ import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import java.util.ArrayList;
-
 @Entity(tableName = "birds",
         indices = { // Optional: Add indices for faster queries if you search by these often
                 @Index(value = "common_name", unique = false), // Set unique = true if common names must be unique

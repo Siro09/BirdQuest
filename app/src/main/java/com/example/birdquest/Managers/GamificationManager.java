@@ -246,7 +246,7 @@ public class GamificationManager {
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .collection(IDENTIFIED_BIRDS_SUBCOLLECTION)
-                    .whereEqualTo("correctlyIdentified", true) // Assuming you have such a field
+                    .whereEqualTo("identified", true) // Assuming you have such a field
                     .get()
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
@@ -292,17 +292,17 @@ public class GamificationManager {
         }
     }
 
-    public static void setUniqueCorrectBirdsIdentifiedFirestore(String uniqueCorrectBirdsIdentified, @Nullable WriteOperationCallback callback) {
+    public static void setUniqueCorrectBirdsIdentifiedFirestore(int uniqueCorrectBirdsIdentified, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         // Assuming IdentifiedBird model has a field like 'correctlyIdentified'
         IdentifiedBird birdToInsert = new IdentifiedBird(true); // Example: true means correctly identified
         if (currentUser != null) {
-            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid()).collection(IDENTIFIED_BIRDS_SUBCOLLECTION)
-                    .document(uniqueCorrectBirdsIdentified).set(birdToInsert) // Using bird's name/ID as document ID
+            firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
+                    .update("uniqueCorrectBirdsIdentifiedCount", uniqueCorrectBirdsIdentified)// Using bird's name/ID as document ID
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            Log.d(TAG, "User " + IDENTIFIED_BIRDS_SUBCOLLECTION + " updated successfully for bird: " + uniqueCorrectBirdsIdentified);
+                            Log.d(TAG, "User " + "uniqueCorrectBirdsIdentified" + " updated successfully to: " + uniqueCorrectBirdsIdentified);
                             if (callback != null) callback.onSuccess();
                         } else {
                             Log.e(TAG, "Error updating user " + IDENTIFIED_BIRDS_SUBCOLLECTION + ": ", task.getException());
@@ -475,6 +475,33 @@ public class GamificationManager {
                             if (task.isSuccessful()) {
                                 Log.d(TAG, "Bird '" + birdIdentifier + "' added to " + IDENTIFIED_BIRDS_SUBCOLLECTION + " for user " + currentUser.getUid());
                                 Toast.makeText(context, birdIdentifier + " added to your identified list!", Toast.LENGTH_SHORT).show();
+                                getUniqueCorrectBirdsIdentifiedCount(context, new UniqueBirdsCountCallback() {
+                                    @Override
+                                    public void onUniqueBirdsCountReceived(int currentUniqueBirdsCount) {
+
+                                        setUniqueCorrectBirdsIdentifiedFirestore(currentUniqueBirdsCount, new WriteOperationCallback() {
+                                            @Override
+                                            public void onSuccess() {
+                                                Log.d(TAG, "UniqueBirdsCount incremented to " + currentUniqueBirdsCount);
+                                                // You could add a Toast here if desired
+                                                // Toast.makeText(context, "Perfect quiz score!", Toast.LENGTH_SHORT).show();
+
+                                            }
+
+                                            @Override
+                                            public void onError(Exception e) {
+                                                Log.e(TAG, "Failed to set new UniqueBirdsCount.", e);
+
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(Exception e) {
+                                        Log.e(TAG, "Failed to get current UniqueBirdsCount to increment.", e);
+
+                                    }
+                                });
 
                             } else {
                                 Log.e(TAG, "Error adding bird '" + birdIdentifier + "' to " + IDENTIFIED_BIRDS_SUBCOLLECTION + ": ", task.getException());
