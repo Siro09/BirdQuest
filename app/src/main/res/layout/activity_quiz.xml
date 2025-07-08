@@ -24,21 +24,80 @@
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/imageViewBird"
+    <LinearLayout
+        android:id="@+id/mediaSwitcherLayout"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:scaleType="fitCenter"
-        android:contentDescription="@string/bird_image_for_quiz"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/textViewScore"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/textViewQuestion"
-        app:layout_constraintDimensionRatio="16:9"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        android:gravity="center_horizontal">
+        <Button
+            android:id="@+id/btnShowSoundPlayer"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sound"
+            android:textSize="12sp"/>
+        <Button
+            android:id="@+id/btnShowDistribution"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Map"
+            android:textSize="12sp"/>
+        <Button
+            android:id="@+id/btnShowImage"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Image"
+            android:textSize="12sp"/>
+
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/mediaFrame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@id/mediaSwitcherLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/textViewQuestion"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="16:9">
+    <ImageView
+        android:id="@+id/imageViewBird"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/bird_image_for_quiz"
+        tools:srcCompat="@tools:sample/backgrounds/scenic"
+        android:visibility="gone" />
+
+    <!-- Sound Player UI (can be more complex, here just a button) -->
+    <Button
+        android:id="@+id/btnPlaySound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Play Bird Sound"
+        android:drawableTop="@android:drawable/ic_media_play"
+        android:padding="16dp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/imageViewDistribution"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/bird_image_for_quiz"
+        tools:srcCompat="@tools:sample/backgrounds/scenic"
+        android:visibility="gone" />
+
+</FrameLayout>
     <!-- tools:srcCompat is for preview in Android Studio, Glide will load the actual image -->
     <!-- Adjust layout_constraintDimensionRatio as needed for your image aspect ratios -->
 
@@ -116,6 +175,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible"/> <!-- tools:visibility for preview -->
+        tools:visibility="gone"/> <!-- tools:visibility for preview -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

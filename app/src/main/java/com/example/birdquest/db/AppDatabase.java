@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.example.birdquest.models.Bird;
 
-@Database(entities = {Bird.class}, version = 6, exportSchema = false) // Increment version number!
+@Database(entities = {Bird.class}, version = 7, exportSchema = false) // Increment version number!
 public abstract class AppDatabase extends RoomDatabase {
 
     private static final String TAG = "AppDatabase";
@@ -20,13 +20,21 @@ public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
     private static Context applicationContext;
-    static final Migration MIGRATION_5_6 = new Migration(5, 6) { // Assuming previous was 3
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
 
             database.execSQL("ALTER TABLE birds ADD COLUMN sound_url TEXT");
 
-            Log.i(TAG, "Migration from version 5 to 6 (added image column) executed.");
+            Log.i(TAG, "Migration from version 5 to 6 (added sound column) executed.");
+        }
+    };
+    static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+
+            database.execSQL("ALTER TABLE birds ADD COLUMN distribution_url TEXT");
+            Log.i(TAG, "Migration from version 6 to 7 (added distribution column) executed.");
         }
     };
     public static AppDatabase getInstance(final Context context) {
@@ -42,6 +50,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class, "bird_database") // Your database name
                             .fallbackToDestructiveMigration()
                             .addMigrations(MIGRATION_5_6)
+                            .addMigrations(MIGRATION_6_7)
                             .addCallback(sRoomDatabaseCallback)
                             .build();
                 }

@@ -21,7 +21,7 @@ public class AddBirdActivity extends AppCompatActivity {
 
     private TextInputLayout tilCommonName, tilLatinName;
     private TextInputEditText editTextCommonName, editTextLatinName,
-            editTextImageUrl, editTextBirdPageUrl, editTextSoundUrl, editTextJsonInput;
+            editTextImageUrl, editTextBirdPageUrl, editTextSoundUrl, editTextJsonInput,editTextDistributionUrl;
     private Button buttonAddManual, buttonAddJson;
 
     @Override
@@ -41,6 +41,7 @@ public class AddBirdActivity extends AppCompatActivity {
         editTextBirdPageUrl = findViewById(R.id.editTextBirdPageUrl);
         editTextSoundUrl = findViewById(R.id.editTextSoundUrl);
         editTextJsonInput = findViewById(R.id.editTextJsonInput);
+        editTextDistributionUrl = findViewById(R.id.editTextDistributionUrl);
         buttonAddManual = findViewById(R.id.buttonAddManual);
         buttonAddJson = findViewById(R.id.buttonAddJson);
 
@@ -73,7 +74,7 @@ public class AddBirdActivity extends AppCompatActivity {
         String imageUrl = editTextImageUrl.getText().toString().trim();
         String birdPageUrl = editTextBirdPageUrl.getText().toString().trim();
         String soundUrl = editTextSoundUrl.getText().toString().trim();
-
+        String distributionUrl = editTextDistributionUrl.getText().toString().trim();
         // Basic Validation
         boolean isValid = true;
         if (TextUtils.isEmpty(commonName)) {
@@ -95,7 +96,7 @@ public class AddBirdActivity extends AppCompatActivity {
             return;
         }
 
-        Bird bird = new Bird(commonName, latinName, imageUrl, birdPageUrl, soundUrl);
+        Bird bird = new Bird(commonName, latinName, birdPageUrl, imageUrl, soundUrl,distributionUrl);
         addBirdViewModel.insertBird(bird);
     }
 

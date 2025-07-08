@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.birdquest.quiz.QuizActivity;
@@ -41,8 +43,7 @@ public class MainActivity extends AppCompatActivity {
         btnQuiz.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, QuizActivity.class);
-                startActivity(intent);
+                showQuizModeDialog();
             }
         });
 
@@ -86,5 +87,20 @@ public class MainActivity extends AppCompatActivity {
                 finish(); // Call finish to destroy MainActivity
             }
         });
+    }
+    private void showQuizModeDialog() {
+        final String[] quizModes = {"Normal (Image Quiz)", "Hard (Sound Quiz)"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose Quiz Mode");
+        builder.setItems(quizModes, (dialog, which) -> {
+            Intent intent = new Intent(MainActivity.this, QuizActivity.class);
+            if (which == 0) { // Normal Mode
+                intent.putExtra("QUIZ_MODE", "NORMAL");
+            } else { // Hard Mode
+                intent.putExtra("QUIZ_MODE", "HARD");
+            }
+            startActivity(intent);
+        });
+        builder.show();
     }
 }

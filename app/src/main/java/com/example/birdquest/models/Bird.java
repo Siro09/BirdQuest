@@ -5,6 +5,8 @@ import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.util.ArrayList;
+
 @Entity(tableName = "birds",
         indices = { // Optional: Add indices for faster queries if you search by these often
                 @Index(value = "common_name", unique = false), // Set unique = true if common names must be unique
@@ -28,8 +30,18 @@ public class Bird {
     public String imageUrl; // We can populate this later or make it nullable
     @ColumnInfo(name = "sound_url")
     public String soundUrl; // We can populate this later or make it nullable
+    @ColumnInfo(name = "distribution_url")
+    public String distributionUrl; // We can populate this later or make it nullable
 
     // Constructors
+    public Bird(String commonName, String latinName, String siteUrl, String imageUrl,String soundUrl, String distributionUrl) {
+        this.commonName = commonName;
+        this.latinName = latinName;
+        this.siteUrl = siteUrl;
+        this.imageUrl = imageUrl;
+        this.soundUrl = soundUrl;
+        this.distributionUrl = distributionUrl;
+    }
     public Bird(String commonName, String latinName, String siteUrl, String imageUrl,String soundUrl) {
         this.commonName = commonName;
         this.latinName = latinName;
@@ -93,6 +105,22 @@ public class Bird {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getDistributionUrl() {
+        return distributionUrl;
+    }
+
+    public void setDistributionUrl(String distributionUrl) {
+        this.distributionUrl = distributionUrl;
+    }
+
+    public String getSoundUrl() {
+        return soundUrl;
+    }
+
+    public void setSoundUrl(String soundUrl) {
+        this.soundUrl = soundUrl;
     }
 
     // toString() method for debugging (optional)

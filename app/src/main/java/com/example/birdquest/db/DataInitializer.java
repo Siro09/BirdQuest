@@ -79,6 +79,7 @@ public class DataInitializer {
                     String siteUrl = null;
                     String imageUrl = null;
                     String soundUrl = null;
+                    String distributionUrl = null;
                     if (commonName == null || commonName.trim().isEmpty()) {
                         Log.w(TAG, "Skipping bird with missing or empty common_name at index " + i + " in " + BIRD_NAMES_FILE);
                         continue;
@@ -95,10 +96,13 @@ public class DataInitializer {
                     }
                     if (siteUrl != null) {
                         ArrayList<String> dataUrls = BirdDataExtractor.extractMatchingDataUrl(siteUrl, latinName);
-                        imageUrl = dataUrls.get(0);
-                        soundUrl = dataUrls.get(1);
+                        if(dataUrls!=null) {
+                            imageUrl = dataUrls.get(0);
+                            soundUrl = dataUrls.get(1);
+                            distributionUrl = dataUrls.get(2);
+                        }
                     }
-                    Bird bird = new Bird(commonName, latinName, siteUrl,imageUrl,soundUrl);
+                    Bird bird = new Bird(commonName, latinName, siteUrl,imageUrl,soundUrl,distributionUrl);
                     birdsToInsert.add(bird);
                 }
 

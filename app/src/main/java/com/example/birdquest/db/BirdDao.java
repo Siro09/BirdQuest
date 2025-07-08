@@ -43,12 +43,19 @@ public interface BirdDao {
      */
     @Query("SELECT * FROM birds WHERE image_url IS NOT NULL AND image_url != '' ORDER BY RANDOM() LIMIT :count")
     List<Bird> getRandomBirdsWithImages(int count);
-
+    /** Get count number of random birds with sound
+     * @param count
+     * @return
+     */
+    @Query("SELECT * FROM birds WHERE image_url IS NOT NULL AND image_url != '' AND sound_url IS NOT NULL AND sound_url != '' AND distribution_url IS NOT NULL AND distribution_url != '' ORDER BY RANDOM() LIMIT :count")
+    List<Bird> getRandomBirdsWithSoundAndDistribution(int count);
     @Query("SELECT common_name FROM birds")
     List<String> getAllBirdCommonNames();
 
     @Query("SELECT common_name FROM birds WHERE image_url IS NOT NULL AND image_url != ''")
     List<String> getAllBirdCommonNamesWithImages();
+    @Query("SELECT common_name FROM birds WHERE image_url IS NOT NULL AND image_url != '' AND sound_url IS NOT NULL AND sound_url != '' AND distribution_url IS NOT NULL AND distribution_url != ''")
+    List<String> getAllBirdCommonNamesWithSoundAndDistribution();
     @Query("SELECT * FROM birds WHERE id = :birdId") // If you need to get a bird by ID
     Bird getBirdById(int birdId);
     @Query("SELECT * FROM birds WHERE common_name LIKE :name OR latin_name LIKE :name")

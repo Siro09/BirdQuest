@@ -1,10 +1,15 @@
 // QuizActivity.java
 package com.example.birdquest.quiz; // Or your desired package
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService; // Added
 import java.util.concurrent.Executors;
 
+import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,8 +17,10 @@ import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,24 +35,20 @@ import com.example.birdquest.R; // Your R file
 import com.example.birdquest.db.AppDatabase;
 import com.example.birdquest.db.BirdDao;
 import com.example.birdquest.models.Bird;
-import com.example.birdquest.models.User;
 import com.google.android.material.button.MaterialButton; // For MaterialButton styling
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import com.example.birdquest.Managers.GamificationManager;
 
-import org.checkerframework.checker.units.qual.A;
-
 public class QuizActivity extends AppCompatActivity implements  AchievementManager.DefinitionsLoadedListener {
 
     private static final String TAG = "QuizActivity";
     private static final long DELAY_NEXT_QUESTION = 1500; // 1.5 seconds for auto-advance
-    private ImageView imageViewBird; // Add this for displaying the bird image
+    private ImageView imageViewBird,imageViewDistribution;
     private AppDatabase appDb;
 
     AchievementManager achievementManager;
@@ -53,63 +56,139 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
     private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
     // Handler to post results back to the main thread
     private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+    private Button btnPlaySound; // New button for hard mode
+    private Button btnShowDistribution; // New button for hard mode
+    private Button btnShowImage; // New button for hard mode
+    private Button btnShowSoundPlayer; // New button for hard mode
+
     private TextView textViewQuestion;
     private TextView textViewScore;
     private TextView textViewQuestionCount;
+    private LinearLayout mediaSwitcherLayout;
     private GridLayout gridLayoutAnswers;
-    // private Button buttonNextQuestion; // Use if you want manual "Next" button
+    // private Button buttonNextQuestion; // manual "Next" button
 
     private List<Question> questionList;
     private int currentQuestionIndex = 0;
     private int score = 0;
     private boolean answerSelectedThisTurn = false; // To prevent multiple answer clicks for one question
-
+    public static final String EXTRA_QUIZ_MODE = "QUIZ_MODE";
+    public static final String MODE_NORMAL = "NORMAL";
+    public static final String MODE_HARD = "HARD";
+    private String currentQuizMode = MODE_NORMAL;
+    private int difficultyScale = 1;
+    private MediaPlayer mediaPlayer;
 
     // Keys for saving state
     private static final String KEY_CURRENT_QUESTION_INDEX = "currentQuestionIndex";
     private static final String KEY_SCORE = "score";
     private static final String KEY_QUESTION_LIST = "questionList"; // If Question is Parcelable/Serializable
     private static final String KEY_ANSWER_SELECTED_THIS_TURN = "answerSelectedThisTurn";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra(EXTRA_QUIZ_MODE)) {
+            currentQuizMode = intent.getStringExtra(EXTRA_QUIZ_MODE);
+        }
+        Log.d(TAG, "Current Quiz Mode: " + currentQuizMode);
 
         textViewQuestion = findViewById(R.id.textViewQuestion);
         textViewScore = findViewById(R.id.textViewScore);
         textViewQuestionCount = findViewById(R.id.textViewQuestionCount);
         gridLayoutAnswers = findViewById(R.id.gridLayoutAnswers);
+        mediaSwitcherLayout = findViewById(R.id.mediaSwitcherLayout);
+        btnShowDistribution = findViewById(R.id.btnShowDistribution);
+        btnShowImage = findViewById(R.id.btnShowImage);
+        btnShowSoundPlayer = findViewById(R.id.btnShowSoundPlayer);
         imageViewBird = findViewById(R.id.imageViewBird); // Initialize ImageView
+        btnPlaySound = findViewById(R.id.btnPlaySound);
+        imageViewDistribution = findViewById(R.id.imageViewDistribution);
         // buttonNextQuestion = findViewById(R.id.buttonNextQuestion); // Uncomment if using manual next
+
+        btnShowSoundPlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnPlaySound.setEnabled(true);
+                btnPlaySound.setVisibility(View.VISIBLE);
+                imageViewDistribution.setVisibility(View.GONE);
+                imageViewBird.setVisibility(View.GONE);
+            }
+        });
+        btnShowDistribution.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(difficultyScale > 2)
+                {
+                    difficultyScale = 2;
+                }
+                imageViewDistribution.setVisibility(View.VISIBLE);
+                imageViewBird.setVisibility(View.GONE);
+                btnPlaySound.setVisibility(View.GONE);
+            }
+        });
+        btnShowImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(difficultyScale > 1)
+                {
+                    difficultyScale = 1;
+                }
+                imageViewBird.setVisibility(View.VISIBLE);
+                imageViewDistribution.setVisibility(View.GONE);
+                btnPlaySound.setVisibility(View.GONE);
+            }
+        });
+
+        btnPlaySound.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playCurrentBirdSound();
+            }
+        });
         appDb = AppDatabase.getInstance(getApplicationContext());
+        if (currentQuizMode.equals(MODE_NORMAL))
+        {
+            mediaSwitcherLayout.setVisibility(View.GONE);
+        }
+        else if (currentQuizMode.equals(MODE_HARD))
+        {
+            mediaSwitcherLayout.setVisibility(View.VISIBLE);
+        }
         if (savedInstanceState != null) {
             // Restore state
             currentQuestionIndex = savedInstanceState.getInt(KEY_CURRENT_QUESTION_INDEX);
             score = savedInstanceState.getInt(KEY_SCORE);
             answerSelectedThisTurn = savedInstanceState.getBoolean(KEY_ANSWER_SELECTED_THIS_TURN);
-
+            currentQuizMode = savedInstanceState.getString(EXTRA_QUIZ_MODE);
+            Log.d(TAG, "Current Quiz Mode: " + currentQuizMode);
             // For the questionList, it's more complex if it's a list of custom objects.
             // Option A: If Question is Parcelable
             if (savedInstanceState.containsKey(KEY_QUESTION_LIST)) {
                 questionList = savedInstanceState.getParcelableArrayList(KEY_QUESTION_LIST);
             }
-
+            if (currentQuizMode.equals(MODE_NORMAL))
+            {
+                mediaSwitcherLayout.setVisibility(View.GONE);
+            }
+            else if (currentQuizMode.equals(MODE_HARD))
+            {
+                mediaSwitcherLayout.setVisibility(View.VISIBLE);
+            }
+            difficultyScale = savedInstanceState.getInt("difficultyScale");
 
             if (questionList != null && !questionList.isEmpty() && currentQuestionIndex < questionList.size()) {
                 Log.d(TAG, "Restored state: index=" + currentQuestionIndex + ", score=" + score + ", questions=" + questionList.size());
-
                 displayQuestion(); // Display the restored question
             } else {
                 // If questionList couldn't be restored or is invalid, load fresh
                 Log.d(TAG, "Question list not properly restored or empty, loading fresh.");
-                questionList = new ArrayList<>(); // Initialize if null
                 loadQuestionsInBackground();
             }
         } else {
             // No saved state, load fresh
             Log.d(TAG, "No saved state, loading fresh questions.");
-            questionList = new ArrayList<>(); // Initialize
             loadQuestionsInBackground();
 
         }
@@ -133,36 +212,38 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
         outState.putInt(KEY_CURRENT_QUESTION_INDEX, currentQuestionIndex);
         outState.putInt(KEY_SCORE, score);
         outState.putBoolean(KEY_ANSWER_SELECTED_THIS_TURN, answerSelectedThisTurn);
-
+        outState.putString(EXTRA_QUIZ_MODE, currentQuizMode);
+        outState.putInt("difficultyScale", difficultyScale);
         // Save the question list if it's not null and not empty
         // This requires your Question class to be Parcelable or Serializable
         if (questionList != null && !questionList.isEmpty()) {
-            // Option A: If Question is Parcelable
+
             outState.putParcelableArrayList(KEY_QUESTION_LIST, (ArrayList<? extends Parcelable>) questionList);
-            // Option B: If Question is Serializable
-            // outState.putSerializable(KEY_QUESTION_LIST, (ArrayList<Question>) questionList);
+
         }
     }
+    private void playCurrentBirdSound() {
 
+        String currentBirdSoundUrl ="";
 
-    private void loadQuestionsHardCoded() {
-        // In a real app, load from a database, file, or network
-        // For this example, we'll hardcode some questions
-        questionList = new ArrayList<>();
+        currentBirdSoundUrl = questionList.get(currentQuestionIndex).getSoundUrl();
+        if(mediaPlayer != null && mediaPlayer.isPlaying() )
+        {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer= null;
+            btnPlaySound.setCompoundDrawablesWithIntrinsicBounds(null, ContextCompat.getDrawable(this,android.R.drawable.ic_media_play),null,null);
+        }
+        else if (currentBirdSoundUrl != null ) {
 
-        questionList.add(new Question("What is the main color of a Blue Jay?",
-                Arrays.asList("Red", "Blue", "Green", "Yellow"), 1));
-        questionList.add(new Question("Which bird is known for its ability to mimic sounds?",
-                Arrays.asList("Sparrow", "Robin", "Mockingbird", "Eagle"), 2));
-        questionList.add(new Question("What do flamingos primarily eat to get their pink color?",
-                Arrays.asList("Fish", "Insects", "Shrimp & Algae", "Seeds"), 2));
-        questionList.add(new Question("Which of these birds cannot fly?",
-                Arrays.asList("Penguin", "Pigeon", "Pelican", "Parrot"), 0));
-        questionList.add(new Question("What is the national bird of the United States?",
-                Arrays.asList("Dove", "Bald Eagle", "Turkey", "Cardinal"), 1));
-
-        // Shuffle questions for variety (optional)
-         Collections.shuffle(questionList);
+            mediaPlayer=MediaPlayer.create(this, Uri.parse(currentBirdSoundUrl));
+            mediaPlayer.setOnCompletionListener( mp -> {
+                btnPlaySound.setCompoundDrawablesWithIntrinsicBounds(null, ContextCompat.getDrawable(this,android.R.drawable.ic_media_play),null,null);
+                mp.release();
+            }); // Release when done
+            mediaPlayer.start();
+            btnPlaySound.setCompoundDrawablesWithIntrinsicBounds(null, ContextCompat.getDrawable(this,android.R.drawable.ic_media_pause),null,null);
+        }
 
     }
     private void loadQuestionsInBackground() {
@@ -175,15 +256,27 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
 
             try {
                 BirdDao birdDao = appDb.birdDao(); // Get DAO instance
-
-                List<Bird> quizBirds = birdDao.getRandomBirdsWithImages(10); // DB CALL
-
+                List<Bird> quizBirds = Collections.emptyList();
+                if(Objects.equals(currentQuizMode, MODE_NORMAL)) {
+                    quizBirds = birdDao.getRandomBirdsWithImages(10); // DB CALL
+                }
+                else if(Objects.equals(currentQuizMode, MODE_HARD))
+                {
+                    quizBirds = birdDao.getRandomBirdsWithSoundAndDistribution(10); // DB CALL
+                }
                 if (quizBirds == null || quizBirds.size() < 4) {
                     Log.e(TAG, "Not enough birds with images in the database. Found: " + (quizBirds == null ? 0 : quizBirds.size()));
                     success = false;
                     errorMessage = "Not enough bird data for the quiz.";
                 } else {
-                    List<String> allCommonNames = birdDao.getAllBirdCommonNamesWithImages(); // DB CALL
+                    List<String> allCommonNames = Collections.emptyList();
+                    if(Objects.equals(currentQuizMode, MODE_NORMAL)) {
+                        allCommonNames = birdDao.getAllBirdCommonNamesWithImages(); // DB CALL
+                    }
+                    else if(Objects.equals(currentQuizMode, MODE_HARD))
+                    {
+                        allCommonNames = birdDao.getAllBirdCommonNamesWithSoundAndDistribution(); // DB CALL
+                    }
                     if (allCommonNames == null || allCommonNames.isEmpty() || allCommonNames.size() < 4) { // Check for sufficient distractors
                         Log.e(TAG, "Not enough common names for distractors. Found: " + (allCommonNames == null ? 0 : allCommonNames.size()));
                         success = false;
@@ -197,7 +290,7 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                                 continue;
                             }
 
-                            String questionText = "Identify this bird:";
+                            String questionText = "Identifica pasarea:";
                             List<String> options = new ArrayList<>();
                             options.add(correctBird.getCommonName());
 
@@ -220,7 +313,13 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                                 Log.e(TAG, "Critical: Correct answer not found in options for " + correctBird.getCommonName());
                                 continue;
                             }
-                            tempQuestionList.add(new Question(questionText, options, correctAnswerIndex, correctBird.getImageUrl()));
+                            if(Objects.equals(currentQuizMode, MODE_NORMAL)) {
+                                tempQuestionList.add(new Question(questionText, options, correctAnswerIndex, correctBird.getImageUrl()));
+                            }
+                            else if(Objects.equals(currentQuizMode, MODE_HARD))
+                            {
+                                tempQuestionList.add(new Question(questionText, options, correctAnswerIndex, correctBird.getImageUrl(),correctBird.getSoundUrl(),correctBird.getDistributionUrl()));
+                            }
                         }
                         if (tempQuestionList.isEmpty() && !quizBirds.isEmpty()) {
                             Log.w(TAG, "Processed birds, but tempQuestionList is empty (validation/distractor issues).");
@@ -285,62 +384,86 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
             gridLayoutAnswers.removeAllViews(); // Clear previous answer buttons
             gridLayoutAnswers.setVisibility(View.VISIBLE);
             gridLayoutAnswers.setAlpha(0f); // For fade-in animation
-
-            // Handle Image Display
-            if (currentQuestion.getImageUrl() != null) {
-                imageViewBird.setVisibility(View.VISIBLE);
-                Glide.with(this)
-                        .load(currentQuestion.getImageUrl())
-                        .placeholder(R.drawable.ic_bird_placeholder) // Optional: a placeholder image
-                        .error(R.drawable.ic_launcher_foreground)       // Optional: an error image if load fails
-                        .into(imageViewBird);
-            } else {
-                imageViewBird.setVisibility(View.GONE); // Hide if no image URL
-                Log.w(TAG, "No image URL for question: " + currentQuestion.getQuestionText());
+            if (Objects.equals(currentQuizMode, MODE_NORMAL)) {
+                difficultyScale =1;
+                // Handle Image Display
+                if (currentQuestion.getImageUrl() != null) {
+                    imageViewBird.setVisibility(View.VISIBLE);
+                    Glide.with(this)
+                            .load(currentQuestion.getImageUrl())
+                            .placeholder(R.drawable.ic_bird_placeholder) //  a placeholder image
+                            .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
+                            .into(imageViewBird);
+                } else {
+                    imageViewBird.setVisibility(View.GONE); // Hide if no image URL
+                    Log.w(TAG, "No image URL for question: " + currentQuestion.getQuestionText());
+                }
+            }
+            else if(Objects.equals(currentQuizMode, MODE_HARD))
+            {
+                difficultyScale = 3;
+                if(mediaSwitcherLayout != null )
+                {
+                    mediaSwitcherLayout.setVisibility(View.VISIBLE);
+                    btnShowSoundPlayer.setVisibility(View.VISIBLE);
+                    btnShowDistribution.setVisibility(View.VISIBLE);
+                    btnShowImage.setVisibility(View.VISIBLE);
+                    btnShowSoundPlayer.callOnClick();
+                    Glide.with(this)
+                            .load(currentQuestion.getImageUrl())
+                            .placeholder(R.drawable.ic_bird_placeholder) // a placeholder image
+                            .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
+                            .into(imageViewBird);
+                    Glide.with(this)
+                            .load(currentQuestion.getDistributionUrl())
+                            .placeholder(R.drawable.ic_bird_placeholder) //  a placeholder image
+                            .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
+                            .into(imageViewDistribution);
+                }
             }
 
             List<String> options = currentQuestion.getAnswerOptions();
             for (int i = 0; i < options.size(); i++) {
-                // Inflate the answer button from item_answer_choice.xml
-                MaterialButton answerButton = (MaterialButton) LayoutInflater.from(this)
-                        .inflate(R.layout.item_answer_choice, gridLayoutAnswers, false);
+                    // Inflate the answer button from item_answer_choice.xml
+                    MaterialButton answerButton = (MaterialButton) LayoutInflater.from(this)
+                            .inflate(R.layout.item_answer_choice, gridLayoutAnswers, false);
 
-                answerButton.setText(options.get(i));
-                final int optionIndex = i; // Must be final for use in lambda
+                    answerButton.setText(options.get(i));
+                    final int optionIndex = i; // Must be final for use in lambda
 
-                answerButton.setOnClickListener(v -> {
-                    if (!answerSelectedThisTurn) { // Process click only if no answer selected yet for this turn
-                        checkAnswer(optionIndex, answerButton);
-                        answerSelectedThisTurn = true;
-                    }
-                });
+                    answerButton.setOnClickListener(v -> {
+                        if (!answerSelectedThisTurn) { // Process click only if no answer selected yet for this turn
+                            checkAnswer(optionIndex, answerButton);
+                            answerSelectedThisTurn = true;
+                        }
+                    });
 
-                // Add button to GridLayout
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-                params.width = 0; // Use 0 for width/height with layout_weight for even distribution
-                params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Weight 1 for even distribution
-                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-                params.setMargins(8,8,8,8); // Or use margins from item_answer_choice.xml
-                answerButton.setLayoutParams(params);
+                    // Add button to GridLayout
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                    params.width = 0; // Use 0 for width/height with layout_weight for even distribution
+                    params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                    params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // Weight 1 for even distribution
+                    params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+                    params.setMargins(8, 8, 8, 8); // Or use margins from item_answer_choice.xml
+                    answerButton.setLayoutParams(params);
 
-                gridLayoutAnswers.addView(answerButton);
+                    gridLayoutAnswers.addView(answerButton);
 
+                }
+                gridLayoutAnswers.requestLayout(); // Ask the grid to re-measure and re-layout
+                gridLayoutAnswers.invalidate();   // Ask the grid to redraw
+                // Fade in animation for answer grid
+                gridLayoutAnswers.animate().alpha(1f).setDuration(500).start();
+
+                // If using manual next button
+                // buttonNextQuestion.setVisibility(View.GONE);
+
+            } else {
+                // Quiz finished
+                showFinalScore();
             }
-            gridLayoutAnswers.requestLayout(); // Ask the grid to re-measure and re-layout
-            gridLayoutAnswers.invalidate();   // Ask the grid to redraw
-            // Fade in animation for answer grid
-            gridLayoutAnswers.animate().alpha(1f).setDuration(500).start();
 
-            // If using manual next button, hide it until an answer is selected
-            // buttonNextQuestion.setVisibility(View.GONE);
-
-        } else {
-            // Quiz finished
-            showFinalScore();
-        }
     }
-
     private void checkAnswer(int selectedOptionIndex, MaterialButton selectedButton) {
         Question currentQuestion = questionList.get(currentQuestionIndex);
         boolean isCorrect = (selectedOptionIndex == currentQuestion.getCorrectAnswerIndex());
@@ -352,9 +475,16 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                 child.setEnabled(false);
             }
         }
-
+        if(mediaPlayer!=null)
+        {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            btnPlaySound.setCompoundDrawablesWithIntrinsicBounds(null, ContextCompat.getDrawable(this,android.R.drawable.ic_media_play),null,null);
+            mediaPlayer= null;
+        }
         if (isCorrect) {
-            score++;
+            score=score+ difficultyScale;
+
             String identifiedBird = currentQuestion.getCorrectAnswer();
             GamificationManager gamificationManager = new GamificationManager();
             gamificationManager.hasUserIdentifiedBirdBefore(identifiedBird, new GamificationManager.BirdIdentificationCheckListener() {
@@ -424,9 +554,10 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
 
 
         //track gamification
-        GamificationManager.addXP(this,score * 5);
+        GamificationManager.addXP(this, score * 2);
         GamificationManager.addQuizCompletions(this);
-        if(score == questionList.size()){
+
+        if(score >= questionList.size()){
             GamificationManager.addPerfectQuizScores(this);
         }
 
@@ -450,6 +581,15 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                     textViewQuestion.setAlpha(1f); // Reset alpha
                     gridLayoutAnswers.setVisibility(View.VISIBLE);
                     gridLayoutAnswers.setAlpha(1f);
+                    if (currentQuizMode.equals(MODE_NORMAL))
+                    {
+                        mediaSwitcherLayout.setVisibility(View.GONE);
+
+                    }
+                    else if (currentQuizMode.equals(MODE_HARD))
+                    {
+                        mediaSwitcherLayout.setVisibility(View.VISIBLE);
+                    }
                     this.loadQuestionsInBackground();
 
                     /*if (questionList != null && !questionList.isEmpty()) {

@@ -46,6 +46,9 @@ public class BirdDataExtractor {
         String searchPatternInPathAudio = ".*" + Pattern.quote(part1Prefix) + ".*" + Pattern.quote(part2Prefix) + ".*\\.(mp3|wav)";
         Pattern patternAudio = Pattern.compile(searchPatternInPathAudio, Pattern.CASE_INSENSITIVE);
 
+        String searchPatternInPathDistribution = ".*" + latinParts[0] + ".*" + latinParts[1] + ".*\\.(jpg|jpeg|png|gif)";
+        Pattern patternDistribution = Pattern.compile(searchPatternInPathDistribution, Pattern.CASE_INSENSITIVE);
+
         Log.d(TAG, "Attempting to fetch URL: " + speciesUrl);
         Log.d(TAG, "Latin Name: " + latinName + ", Part1 Prefix: " + part1Prefix + ", Part2 Prefix: " + part2Prefix);
         Log.d(TAG, "Search pattern for path: " + searchPatternInPathImg);
@@ -62,7 +65,7 @@ public class BirdDataExtractor {
             // 2. Parse the HTML to find <img> tags
             Elements imgTags = doc.select("img[src]"); // Select all img tags with an src attribute
             Elements audioTags = doc.select("audio > source[src]"); // Select all audio tags with an src attribute
-
+            Elements distributionTags = doc.select("div.google-map[data-full]"); // Select all img tags with an src attribute
             Log.d(TAG, "Found " + imgTags.size() + " img tags.");
 
             for (Element imgTag : imgTags) {
@@ -124,6 +127,35 @@ public class BirdDataExtractor {
                 Log.w(TAG, "No matching audio found for pattern on URL: " + speciesUrl);
             }
             Log.d(TAG, "Found audio URLs: " + dataUrls.get(1));
+            for (Element distributionTag : distributionTags) {
+                String distributionSrc = distributionTag.attr("abs:data-full"); // Get absolute URL for the image source
+                // "abs:src" resolves relative URLs against the base URI of the document.
+
+                if (distributionSrc == null || distributionSrc.isEmpty()) {
+                    continue;
+                }
+
+                Log.d(TAG, "Checking img src: " + distributionSrc);
+
+
+                if (!distributionSrc.toLowerCase(Locale.ROOT).startsWith("https://pasaridinromania.sor.ro/")) {
+                    Log.d(TAG, "Skipping image from different domain: " + distributionSrc);
+                    continue;
+                }
+
+                // Check if the path part of the URL matches our pattern
+                Matcher matcher = patternDistribution.matcher(distributionSrc);
+                if (matcher.find()) {
+                    Log.i(TAG, "MATCH FOUND: " + distributionSrc);
+                    dataUrls.add(distributionSrc);
+                    break; // Return the first match
+                }
+            }
+            if (dataUrls.size()==2) {
+                dataUrls.add(null);
+                Log.w(TAG, "No matching image found for pattern on URL: " + speciesUrl);
+            }
+            Log.d(TAG, "Found image URLs: " + dataUrls.get(2));
             return dataUrls;
 
         } catch (IOException e) {

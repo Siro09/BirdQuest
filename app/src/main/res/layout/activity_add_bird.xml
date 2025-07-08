@@ -74,7 +74,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Bird Page URL (e.g., Wikipedia)">
+            android:hint="Bird Page URL">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextBirdPageUrl"
@@ -102,7 +102,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Region"/>
+            android:hint="Distribution Map URL">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextDistributionUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:id="@+id/buttonAddManual"

@@ -87,12 +87,12 @@ public class AddBirdViewModel extends AndroidViewModel {
         String imageUrl = jsonObject.optString("image_url", "");
         String birdPageUrl = jsonObject.optString("site_url", "");
         String soundUrl = jsonObject.optString("sound_url", "");
-
+        String distributionUrl = jsonObject.optString("distribution_url", "");
         // Basic validation (optional, but good)
         if (commonName.isEmpty() || latinName.isEmpty()) {
             throw new JSONException("Common name and Latin name are required in JSON.");
         }
-        return new Bird(commonName, latinName, birdPageUrl, imageUrl, soundUrl);
+        return new Bird(commonName, latinName, birdPageUrl, imageUrl, soundUrl,distributionUrl);
     }
 
     @Override
