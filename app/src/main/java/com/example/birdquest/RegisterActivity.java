@@ -23,6 +23,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = "RegisterActivity";
@@ -127,10 +130,19 @@ public class RegisterActivity extends AppCompatActivity {
 
                             // Optional: Send email verification
                             // user.sendEmailVerification();
-                            User newUser = new User(email, 0, 1);
                             String userId = "";
+
                             if (firebaseUser != null) {
                                 userId = firebaseUser.getUid();
+                                // new user map for Firestore
+                                Map<String, Object> newUser = new HashMap<>();
+                                newUser.put("email", email);
+                                newUser.put("level", 1);
+                                newUser.put("xp", 0);
+                                newUser.put("quizCompletions", 0);
+                                newUser.put("perfectQuizScores", 0);
+                                newUser.put("uniqueCorrectBirdsIdentifiedCount", 0);
+
                                 mFirestore.collection("users").document(userId).set(newUser)
                                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
