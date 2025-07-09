@@ -421,7 +421,6 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
 
                     // load bird distribution map image
                     boolean reachable = isOnSameWifiSubnet(this,"192.168.0.102");
-                    outputFile = new File(getCacheDir(), currentQuestion.getCorrectAnswer()+"_map_image.png");
                     if (!reachable) {
                         Log.e(TAG, "Python backend not reachable.");
                         Glide.with(this)
@@ -431,6 +430,7 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                                 .into(imageViewDistribution);
                     }
                     else {
+                        outputFile = new File(getCacheDir(), currentQuestion.getCorrectAnswer()+"_map_image.png");
                         BackendCaller caller = new BackendCaller();
                         caller.callBackend(currentQuestion.getDistributionUrl(), outputFile, success -> {
                             if (success) {
