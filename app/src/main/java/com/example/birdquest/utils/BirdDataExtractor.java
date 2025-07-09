@@ -39,7 +39,6 @@ public class BirdDataExtractor {
         // This pattern looks for the prefixes in the image URL path.
         // It's a bit loose to account for variations like hyphens or underscores.
         // Example: /mic.*pyg.*\.jpg (or .png, .jpeg etc.)
-        // We will refine this by checking the domain as well.
         String searchPatternInPathImg = ".*" + Pattern.quote(part1Prefix) + ".*" + Pattern.quote(part2Prefix) + ".*\\.(jpg|jpeg|png|gif)";
         Pattern patternImg = Pattern.compile(searchPatternInPathImg, Pattern.CASE_INSENSITIVE);
 
@@ -129,7 +128,7 @@ public class BirdDataExtractor {
             Log.d(TAG, "Found audio URLs: " + dataUrls.get(1));
             for (Element distributionTag : distributionTags) {
                 String distributionSrc = distributionTag.attr("abs:data-full"); // Get absolute URL for the image source
-                // "abs:src" resolves relative URLs against the base URI of the document.
+
 
                 if (distributionSrc == null || distributionSrc.isEmpty()) {
                     continue;

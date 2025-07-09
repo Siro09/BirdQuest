@@ -1,5 +1,4 @@
-// AchievementManager.java
-package com.example.birdquest.Managers; // Or your preferred package
+package com.example.birdquest.Managers;
 
 import android.content.Context;
 import android.util.Log;
@@ -9,7 +8,7 @@ import androidx.annotation.NonNull;
 
 import com.example.birdquest.models.Achievement;
 import com.example.birdquest.models.IdentifiedBird;
-import com.example.birdquest.models.User; // Your User model
+import com.example.birdquest.models.User;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
@@ -53,7 +52,7 @@ public class AchievementManager {
     public AchievementManager(Context context) {
         this.db = FirebaseFirestore.getInstance();
         this.mAuth = FirebaseAuth.getInstance();
-        this.context = context.getApplicationContext(); // Use application context to avoid leaks
+        this.context = context.getApplicationContext();
         this.allAchievementDefinitions = new ArrayList<>();
 
     }
@@ -126,8 +125,7 @@ public class AchievementManager {
         }
         if (allAchievementDefinitions.isEmpty()) {
             Log.w(TAG, "Achievement definitions not loaded yet. Retrying load or skipping check.");
-            // Attempt to reload if empty, but be mindful of frequent reloads.
-            // Consider a flag to prevent too many reload attempts in a short period.
+
             loadAllAchievementDefinitions();
             return;
         }
@@ -150,9 +148,6 @@ public class AchievementManager {
             }
         }).addOnFailureListener(e -> Log.e(TAG, "Failed to fetch user for achievement check (UID: " + userId + "): ", e));
     }
-
-
-    // In AchievementManager.java, inside checkAchievementsForUser method
 
     private void checkAchievementsForUser(@NonNull User user, @NonNull String userId) {
         // Task to get already unlocked achievements
@@ -185,14 +180,13 @@ public class AchievementManager {
                         birdsIdentified.add(bird);
                     }
                     // Update the user object with the fetched count.
-                    // Make sure your User model has a method like setUniqueBirdsIdentifiedCount()
-                    // or that you update the relevant field directly if it's public.
-                    user.setUniqueCorrectBirdsIdentified(birdsIdentified); // Assuming User.java has this setter
+
+                    user.setUniqueCorrectBirdsIdentified(birdsIdentified);
 
                     Log.d(TAG, "User " + userId + " has identified " + birdsIdentified.size() + " unique birds.");
 
-                    // Now that we have the user object updated with the bird count,
-                    // proceed with checking all achievement definitions.
+
+                    // checking all achievement definitions.
                     WriteBatch batch = db.batch();
                     boolean newAchievementAwarded = false;
                     long totalXpFromNewAchievements = 0;
@@ -205,7 +199,7 @@ public class AchievementManager {
                                     criteriaMet = user.getQuizCompletions() >= definition.getCriteriaValue();
                                     break;
                                 case CRITERIA_UNIQUE_BIRDS_IDENTIFIED:
-                                    // Now use the count from the user object, which we just updated
+
                                     criteriaMet = user.getUniqueCorrectBirdsCount() >= definition.getCriteriaValue();
                                     break;
                                 case CRITERIA_PERFECT_QUIZZES:

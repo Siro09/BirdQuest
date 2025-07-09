@@ -1,4 +1,4 @@
-package com.example.birdquest.adapters; // Or your adapter package
+package com.example.birdquest.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,9 +10,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide; // For loading image icons, if they are URLs
+import com.bumptech.glide.Glide;
 import com.example.birdquest.R;
-import com.example.birdquest.models.Achievement; // Your model for unlocked achievements
+import com.example.birdquest.models.Achievement;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -59,7 +59,6 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         }
 
         // Handle Icon loading (example using Glide for URLs, or local drawables)
-        // You'll need to adapt this based on how your Achievement model stores icon info
         if (achievement.getIconUrl() != null && !achievement.getIconUrl().isEmpty()) {
             Glide.with(context)
                     .load(achievement.getIconUrl())
@@ -81,7 +80,7 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         if (newAchievements != null) {
             this.achievementList.addAll(newAchievements);
         }
-        notifyDataSetChanged(); // Or use DiffUtil for better performance
+        notifyDataSetChanged();
     }
 
     static class AchievementViewHolder extends RecyclerView.ViewHolder {

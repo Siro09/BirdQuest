@@ -39,7 +39,7 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register); // Use your register XML file name
+        setContentView(R.layout.activity_register);
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -65,7 +65,7 @@ public class RegisterActivity extends AppCompatActivity {
         String password = editTextRegisterPassword.getText().toString().trim();
         String confirmPassword = editTextRegisterConfirmPassword.getText().toString().trim(); // Optional
 
-        // --- Input Validations ---
+        // Input Validations
         if (TextUtils.isEmpty(email)) {
             editTextRegisterEmail.setError("Email is required.");
             editTextRegisterEmail.requestFocus();
@@ -89,7 +89,7 @@ public class RegisterActivity extends AppCompatActivity {
             editTextRegisterPassword.requestFocus();
             return;
         }
-        if (!(password.matches(".*[A-Z].*") && password.matches(".*[a-z].*") && password.matches(".*\\d.*"))) { // Firebase default minimum password length
+        if (!(password.matches(".*[A-Z].*") && password.matches(".*[a-z].*") && password.matches(".*\\d.*"))) {
             editTextRegisterPassword.setError("Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.");
             editTextRegisterPassword.requestFocus();
             return;
@@ -108,7 +108,7 @@ public class RegisterActivity extends AppCompatActivity {
 
             return;
         }
-        // --- End Input Validations ---
+        // End Input Validations
 
         progressBarRegister.setVisibility(View.VISIBLE);
         textViewRegisterError.setVisibility(View.GONE);

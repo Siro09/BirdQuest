@@ -3,7 +3,7 @@ package com.example.birdquest.db;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.birdquest.models.Bird; // Your Bird model
+import com.example.birdquest.models.Bird;
 import com.example.birdquest.utils.BirdDataExtractor;
 
 import org.json.JSONArray;
@@ -142,6 +142,4 @@ public class DataInitializer {
         return json;
     }
 
-    // Remember to call DataInitializer.populateDatabase(...) appropriately,
-    // typically when your AppDatabase instance is first created using RoomDatabase.Callback.
 }

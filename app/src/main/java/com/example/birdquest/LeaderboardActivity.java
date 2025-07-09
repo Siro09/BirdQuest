@@ -1,5 +1,5 @@
-// [1] LeaderboardActivity.java
-package com.example.birdquest; // Sau pachetul tău
+
+package com.example.birdquest;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,16 +12,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar; // Corect import for MaterialToolbar
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.birdquest.R; // Asigură-te că R este importat corect
+import com.example.birdquest.R;
 import com.example.birdquest.adapters.LeaderboardAdapter;
 import com.example.birdquest.models.User;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query; // Corect import for Query
-import com.google.firebase.firestore.QueryDocumentSnapshot; // Corect import
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -105,7 +105,7 @@ public class LeaderboardActivity extends AppCompatActivity {
         // Și câmpurile: level, uniqueBirdsIdentifiedCount, perfectQuizScoresCount
         db.collection("users")
                 .orderBy(currentSortField, currentSortDirection)
-                .limit(100) // Limitează la primii 100 pentru performanță
+                .limit(100) // Limitează la a primii 100 pentru performanță
                 .get()
                 .addOnCompleteListener(task -> {
                     showLoading(false);

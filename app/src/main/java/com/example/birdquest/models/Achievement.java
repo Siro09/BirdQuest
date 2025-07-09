@@ -48,7 +48,7 @@ public class Achievement {
     public long getCriteriaValue() { return criteriaValue; }
     public String getIconUrl() { return iconUrl; }
 
-    // Setters (mainly for manual creation or if you map from DocumentSnapshot manually)
+
     public void setId(String id) { this.id = id; }
     public void setName(String name) { this.name = name; }
     public void setDescription(String description) { this.description = description; }

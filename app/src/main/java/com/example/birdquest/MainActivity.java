@@ -11,13 +11,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.birdquest.quiz.QuizActivity;
-import com.google.firebase.auth.FirebaseAuth; // Import FirebaseAuth
+import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
     private Button btnQuiz, btnBirdDex, btnGamification,btnAddBird;
-    private Button btnLogout; // Declare btnLogout here
-    private FirebaseAuth mAuth; // Declare FirebaseAuth instance
+    private Button btnLogout;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean("logged_in", false);
-                // You might also want to clear other user-specific data from SharedPreferences here
+                // might also want to clear other user-specific data from SharedPreferences here
                 // editor.remove("user_email"); // Example
                 // editor.remove("user_id");   // Example
                 editor.apply();

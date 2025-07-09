@@ -1,4 +1,4 @@
-package com.example.birdquest; // Adjust package name as needed
+package com.example.birdquest;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -8,8 +8,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.birdquest.models.Bird; // Adjust Bird model import
-import com.example.birdquest.viewmodels.AddBirdViewModel; // Adjust ViewModel import
+import com.example.birdquest.models.Bird;
+import com.example.birdquest.viewmodels.AddBirdViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 

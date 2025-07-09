@@ -15,9 +15,6 @@ import java.util.List;
 // Example BirdDao.java
 @Dao
 public interface BirdDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE) // Or REPLACE, depending on desired behavior
-    void insert(Bird bird);
-
 
     @Delete
     void delete(Bird bird);
@@ -43,7 +40,7 @@ public interface BirdDao {
      */
     @Query("SELECT * FROM birds WHERE image_url IS NOT NULL AND image_url != '' ORDER BY RANDOM() LIMIT :count")
     List<Bird> getRandomBirdsWithImages(int count);
-    /** Get count number of random birds with sound
+    /** Get count number of random birds with sound and distribution map and images
      * @param count
      * @return
      */

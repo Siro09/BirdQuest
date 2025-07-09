@@ -105,7 +105,9 @@ public class User {
     public int getUniqueCorrectBirdsIdentifiedCount() {
         return uniqueCorrectBirdsIdentifiedCount;
     }
-
+    /** function for the actual UniqueCorrectBirdsIdentifiedCount from user object
+    **
+     */
     public void setUniqueCorrectBirdsIdentifiedCount(int uniqueCorrectBirdsIdentifiedCount) {
         this.uniqueCorrectBirdsIdentifiedCount = uniqueCorrectBirdsIdentifiedCount;
     }
@@ -119,6 +121,7 @@ public class User {
                 ", quizCompletions=" + quizCompletions +
                 ", perfectQuizScores=" + perfectQuizScores +
                 ", uniqueCorrectBirdsIdentified=" + uniqueCorrectBirdsIdentified +
+                ", uniqueCorrectBirdsIdentifiedCount=" + uniqueCorrectBirdsIdentifiedCount +
                 ", achievements=" + achievements +
                 '}';
     }

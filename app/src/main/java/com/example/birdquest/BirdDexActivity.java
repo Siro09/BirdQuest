@@ -1,4 +1,4 @@
-package com.example.birdquest; // Make sure this matches your package name
+package com.example.birdquest;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -8,13 +8,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer; // Import Observer
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.birdquest.adapters.BirdAdapter;
-import com.example.birdquest.db.AppDatabase; // Your AppDatabase
-import com.example.birdquest.models.Bird;   // Your Bird model
+import com.example.birdquest.db.AppDatabase;
+import com.example.birdquest.models.Bird;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +26,7 @@ public class BirdDexActivity extends AppCompatActivity {
 
     private RecyclerView recyclerViewBirdDex;
     private BirdAdapter adapter;
-    private AppDatabase db; // Your AppDatabase instance
+    private AppDatabase db; // AppDatabase instance
     // private BirdDao birdDao; // If not using LiveData directly from DB instance
     private SearchView searchViewBirdDex;
     // Using a simple Executor for background tasks if not using ViewModel with LiveData from DAO
@@ -37,7 +37,7 @@ public class BirdDexActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_birddex); // Your layout file for this activity
+        setContentView(R.layout.activity_birddex); //  layout file for this activity
 
         searchViewBirdDex = findViewById(R.id.searchViewBirdDex);
         recyclerViewBirdDex = findViewById(R.id.recyclerViewBirdDex);
@@ -87,15 +87,13 @@ public class BirdDexActivity extends AppCompatActivity {
         }
         currentBirdsLiveData.observe(this, birdsObserver);
     }
-    // BirdDexActivity.java
+
 
     private void setupSearchView() {
         searchViewBirdDex.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 // User pressed search button or enter
-                // We can choose to do the same as onQueryTextChange or handle it differently
-                // For simplicity, let's treat it the same.
                 loadBirds(query);
                 searchViewBirdDex.clearFocus(); // Optional: Hide keyboard
                 return true; // Indicates we've handled the action
@@ -104,8 +102,6 @@ public class BirdDexActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 // Called when the user types each character
-                // You might want to add a debounce here to avoid too many DB queries
-                // For now, we'll query directly.
                 loadBirds(newText);
                 return true; // Indicates we've handled the action
             }
@@ -120,15 +116,14 @@ public class BirdDexActivity extends AppCompatActivity {
             }
         });
 
-        // Optional: Set a query hint
+        //  Set  query hint
         searchViewBirdDex.setQueryHint("Search birds by name or species...");
     }
     // It's good practice to shutdown the executor when the activity is destroyed
-    // if you are using one like databaseReadExecutor for non-LiveData operations.
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // If you used databaseReadExecutor for Option 2, uncomment the following:
+        // If you use databaseReadExecutor , uncomment the following:
         /*
         if (databaseReadExecutor != null && !databaseReadExecutor.isShutdown()) {
             databaseReadExecutor.shutdown();

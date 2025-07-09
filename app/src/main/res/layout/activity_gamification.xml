@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/grey_100"
     tools:context=".GamificationActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -16,7 +15,7 @@
             android:id="@+id/toolbarGamification"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="Your Progress"
+            app:title="Statistici"
             android:background="?attr/colorPrimary" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -167,7 +166,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_baseline_quiz_24"
+                            android:src="@drawable/ic_quiz_icon_24"
                             app:tint="?attr/colorPrimary"
                             android:layout_marginEnd="12dp"/>
                         <TextView
@@ -225,7 +224,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_bird_placeholder"
+                            android:src="@drawable/ic_bird_24"
                             app:tint="?attr/colorPrimary"
                             android:layout_marginEnd="12dp"/>
                         <TextView
@@ -259,7 +258,7 @@
                 <ImageView
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:src="@drawable/ic_baseline_emoji_events_24"
+                    android:src="@drawable/ic_trophy_24"
                     app:tint="?attr/colorPrimary"
                     android:layout_marginEnd="8dp"/>
 

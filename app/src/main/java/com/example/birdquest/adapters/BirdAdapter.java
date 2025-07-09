@@ -1,4 +1,4 @@
-package com.example.birdquest.adapters; // Or your appropriate package
+package com.example.birdquest.adapters;
 
 import android.content.Context;
 import android.content.Intent;

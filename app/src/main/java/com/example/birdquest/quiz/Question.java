@@ -1,5 +1,5 @@
-// Question.java
-package com.example.birdquest.quiz; // Or your desired package
+
+package com.example.birdquest.quiz;
 
 import android.os.Parcel;
 import android.os.Parcelable;

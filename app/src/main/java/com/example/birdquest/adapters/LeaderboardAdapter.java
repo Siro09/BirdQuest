@@ -1,5 +1,5 @@
 // [1] LeaderboardAdapter.java
-package com.example.birdquest.adapters; // Sau pachetul tău
+package com.example.birdquest.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.birdquest.R; // Asigură-te că R este importat corect
+import com.example.birdquest.R;
 import com.example.birdquest.models.User;
 
 import java.util.ArrayList;
@@ -18,13 +18,13 @@ import java.util.Locale;
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.UserViewHolder> {
 
     private List<User> userList = new ArrayList<>();
-    private String currentSortCriteria = "Nivel"; // Default sau actualizat din Activity
+    private String currentSortCriteria = "Nivel";
 
     public LeaderboardAdapter() {}
 
     public void setUsers(List<User> users) {
         this.userList = users;
-        notifyDataSetChanged(); // Sau folosește DiffUtil pentru performanță mai bună
+        notifyDataSetChanged();
     }
 
     public void setCurrentSortCriteria(String criteria) {
@@ -52,7 +52,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     static class UserViewHolder extends RecyclerView.ViewHolder {
         TextView tvRank, tvUserEmail, tvScoreLabel, tvScoreValue;
-        ImageView ivUserAvatar; // Poți adăuga logica pentru a încărca un avatar real dacă ai URL-uri
+        ImageView ivUserAvatar;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);

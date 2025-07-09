@@ -6,12 +6,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable; // Added for optional callback
+import androidx.annotation.Nullable;
 
 import com.example.birdquest.R;
-import com.example.birdquest.models.Achievement; // Keep if used by User model
+import com.example.birdquest.models.Achievement;
 import com.example.birdquest.models.IdentifiedBird;
-import com.example.birdquest.models.User; // Keep if used for caching, though not directly in these static methods
+import com.example.birdquest.models.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-// import java.util.Map; // Not used in the provided snippet
 
 public class GamificationManager {
     private static final String TAG = "GamificationManager";
@@ -246,7 +245,7 @@ public class GamificationManager {
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                     .collection(IDENTIFIED_BIRDS_SUBCOLLECTION)
-                    .whereEqualTo("identified", true) // Assuming you have such a field
+                    .whereEqualTo("identified", true)
                     .get()
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
@@ -269,7 +268,7 @@ public class GamificationManager {
     }
 
 
-    // --- Methods to SET data (can also have optional callbacks) ---
+    //  Methods to SET data (can also have optional callbacks)
 
     public static void setQuizCompletionsFirestore(int quizCompletions, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
@@ -295,11 +294,11 @@ public class GamificationManager {
     public static void setUniqueCorrectBirdsIdentifiedFirestore(int uniqueCorrectBirdsIdentified, @Nullable WriteOperationCallback callback) {
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        // Assuming IdentifiedBird model has a field like 'correctlyIdentified'
-        IdentifiedBird birdToInsert = new IdentifiedBird(true); // Example: true means correctly identified
+
+        IdentifiedBird birdToInsert = new IdentifiedBird(true);
         if (currentUser != null) {
             firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
-                    .update("uniqueCorrectBirdsIdentifiedCount", uniqueCorrectBirdsIdentified)// Using bird's name/ID as document ID
+                    .update("uniqueCorrectBirdsIdentifiedCount", uniqueCorrectBirdsIdentified)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "User " + "uniqueCorrectBirdsIdentified" + " updated successfully to: " + uniqueCorrectBirdsIdentified);
@@ -379,7 +378,7 @@ public class GamificationManager {
     }
 
 
-    // --- Main Logic Method (add) using Callbacks ---
+    // Main Logic Method (add) using Callbacks
     /**
      * Increments the user's quiz completions count by 1.
      *
@@ -395,8 +394,7 @@ public class GamificationManager {
                     @Override
                     public void onSuccess() {
                         Log.d(TAG, "Quiz completions incremented to " + newCompletions);
-                        // You could add a Toast here if desired
-                        // Toast.makeText(context, "Quiz completed!", Toast.LENGTH_SHORT).show();
+
 
                     }
 
@@ -431,8 +429,6 @@ public class GamificationManager {
                     @Override
                     public void onSuccess() {
                         Log.d(TAG, "Perfect quiz scores incremented to " + newPerfectScores);
-                        // You could add a Toast here if desired
-                        // Toast.makeText(context, "Perfect quiz score!", Toast.LENGTH_SHORT).show();
 
                     }
 
@@ -456,7 +452,7 @@ public class GamificationManager {
      * If the bird is new for the user, it also awards XP.
      *
      * @param context        The application context.
-     * @param birdIdentifier A unique string identifying the bird (e.g., common name, scientific name, or a unique ID).
+     * @param birdIdentifier A unique string identifying the bird (e.g., common name).
      *                       This will be used as the document ID in the subcollection.
      */
     public static void addUniqueCorrectBirdsIdentified(Context context, String birdIdentifier) {
@@ -464,10 +460,9 @@ public class GamificationManager {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 // If not already identified, then add it
                 FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-                // Assuming IdentifiedBird model has a field like 'correctlyIdentified' and a timestamp
+
                 IdentifiedBird birdData = new IdentifiedBird(true); // true for correctlyIdentified
-                // You could add more data to IdentifiedBird, like a timestamp:
-                // birdData.setTimestamp(System.currentTimeMillis());
+
                 firebaseFirestore.collection(USERS_COLLECTION).document(currentUser.getUid())
                         .collection(IDENTIFIED_BIRDS_SUBCOLLECTION).document(birdIdentifier)
                         .set(birdData)
@@ -483,8 +478,6 @@ public class GamificationManager {
                                             @Override
                                             public void onSuccess() {
                                                 Log.d(TAG, "UniqueBirdsCount incremented to " + currentUniqueBirdsCount);
-                                                // You could add a Toast here if desired
-                                                // Toast.makeText(context, "Perfect quiz score!", Toast.LENGTH_SHORT).show();
 
                                             }
 
@@ -523,7 +516,7 @@ public class GamificationManager {
                     @Override
                     public void onLevelReceived(int currentLevel) {
                         int newLevel = currentLevel;
-                        int tempNewXP = newXP; // Use a temporary variable for XP calculation during leveling
+                        int tempNewXP = newXP; //  temporary variable for XP calculation during leveling
 
                         while (tempNewXP >= 50) { // Assuming 50 XP per level
                             newLevel++;
@@ -560,7 +553,7 @@ public class GamificationManager {
                                 public void onError(Exception e) {
                                     Log.e(TAG, "Error setting level.", e);
                                     // Still try to set XP even if level setting failed
-                                    setXPFirestore(finalNewXP, null); // Or handle error more gracefully
+                                    setXPFirestore(finalNewXP, null);
                                 }
                             });
                         } else {
@@ -608,7 +601,7 @@ public class GamificationManager {
     /**
      * Checks if the current user has previously identified a specific bird.
      *
-     * @param birdIdentifier The unique identifier for the bird (e.g., common name or a specific ID).
+     * @param birdIdentifier The unique identifier for the bird (e.g., common name ).
      * @param listener       Callback to receive the result.
      */
     public void hasUserIdentifiedBirdBefore(String birdIdentifier, @NonNull BirdIdentificationCheckListener listener) {

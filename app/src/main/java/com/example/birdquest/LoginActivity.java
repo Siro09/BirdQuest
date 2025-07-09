@@ -1,19 +1,19 @@
-package com.example.birdquest; // Make sure this matches your app's package name
+package com.example.birdquest;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog; // Import AlertDialog
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.DialogInterface; // Import DialogInterface
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns; // Import Patterns for email validation
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout; // For AlertDialog custom layout
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -140,7 +140,7 @@ public class LoginActivity extends AppCompatActivity {
         inputEmail.setHint("Enter your registered email");
         inputEmail.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
 
-        // It's good practice to add some padding to the EditText in the dialog
+        // good practice to add some padding to the EditText in the dialog
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);

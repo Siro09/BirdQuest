@@ -32,7 +32,7 @@
             android:maxLines="1"
             android:ellipsize="end"
             app:layout_constraintStart_toEndOf="@id/tvRank"
-            app:layout_constraintEnd_toStartOf="@id/tvScoreValue"
+            app:layout_constraintEnd_toStartOf="@id/tvScoreLabel"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             tools:text="user.email@example.com" />

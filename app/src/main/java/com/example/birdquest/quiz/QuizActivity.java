@@ -1,14 +1,18 @@
-// QuizActivity.java
-package com.example.birdquest.quiz; // Or your desired package
 
+package com.example.birdquest.quiz;
+
+import java.io.File;
+import java.net.InetAddress;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService; // Added
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,11 +34,12 @@ import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.example.birdquest.Managers.AchievementManager;
-import com.example.birdquest.R; // Your R file
+import com.example.birdquest.R;
+import com.example.birdquest.backend.BackendCaller;
 import com.example.birdquest.db.AppDatabase;
 import com.example.birdquest.db.BirdDao;
 import com.example.birdquest.models.Bird;
-import com.google.android.material.button.MaterialButton; // For MaterialButton styling
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,7 +82,8 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
     private String currentQuizMode = MODE_NORMAL;
     private int difficultyScale = 1;
     private MediaPlayer mediaPlayer;
-
+    private final String backendUrl = "http://192.168.0.102:8000/process/";
+    File outputFile ;
     // Keys for saving state
     private static final String KEY_CURRENT_QUESTION_INDEX = "currentQuestionIndex";
     private static final String KEY_SCORE = "score";
@@ -162,8 +168,7 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
             answerSelectedThisTurn = savedInstanceState.getBoolean(KEY_ANSWER_SELECTED_THIS_TURN);
             currentQuizMode = savedInstanceState.getString(EXTRA_QUIZ_MODE);
             Log.d(TAG, "Current Quiz Mode: " + currentQuizMode);
-            // For the questionList, it's more complex if it's a list of custom objects.
-            // Option A: If Question is Parcelable
+
             if (savedInstanceState.containsKey(KEY_QUESTION_LIST)) {
                 questionList = savedInstanceState.getParcelableArrayList(KEY_QUESTION_LIST);
             }
@@ -214,7 +219,7 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
         outState.putString(EXTRA_QUIZ_MODE, currentQuizMode);
         outState.putInt("difficultyScale", difficultyScale);
         // Save the question list if it's not null and not empty
-        // This requires your Question class to be Parcelable or Serializable
+        // This requires Question class to be Parcelable or Serializable
         if (questionList != null && !questionList.isEmpty()) {
 
             outState.putParcelableArrayList(KEY_QUESTION_LIST, (ArrayList<? extends Parcelable>) questionList);
@@ -248,7 +253,7 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
     private void loadQuestionsInBackground() {
         questionList = new ArrayList<>();
         databaseExecutor.execute(() -> {
-            // --- This block runs on a background thread ---
+            //  This block runs on a background thread
             final List<Question> tempQuestionList = new ArrayList<>();
             boolean success = true;
             String errorMessage = null;
@@ -335,13 +340,13 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                 success = false;
                 errorMessage = "An unexpected error occurred while loading questions.";
             }
-            // --- End of background thread block ---
+            //  End of background thread block
 
-            // Now, post the result back to the main thread
+            //  post the result back to the main thread
             final boolean finalSuccess = success;
             final String finalErrorMessage = errorMessage;
             mainThreadHandler.post(() -> {
-                // --- This block runs on the main thread ---
+                //  This block runs on the main thread
                 // if (progressBar != null) progressBar.setVisibility(View.GONE);
 
                 if (finalSuccess && !tempQuestionList.isEmpty()) {
@@ -413,11 +418,37 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
                             .placeholder(R.drawable.ic_bird_placeholder) // a placeholder image
                             .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
                             .into(imageViewBird);
-                    Glide.with(this)
-                            .load(currentQuestion.getDistributionUrl())
-                            .placeholder(R.drawable.ic_bird_placeholder) //  a placeholder image
-                            .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
-                            .into(imageViewDistribution);
+
+                    // load bird distribution map image
+                    boolean reachable = isOnSameWifiSubnet(this,"192.168.0.102");
+                    outputFile = new File(getCacheDir(), currentQuestion.getCorrectAnswer()+"_map_image.png");
+                    if (!reachable) {
+                        Log.e(TAG, "Python backend not reachable.");
+                        Glide.with(this)
+                                .load(currentQuestion.getDistributionUrl())
+                                .placeholder(R.drawable.ic_bird_placeholder) //  a placeholder image
+                                .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
+                                .into(imageViewDistribution);
+                    }
+                    else {
+                        BackendCaller caller = new BackendCaller();
+                        caller.callBackend(currentQuestion.getDistributionUrl(), outputFile, success -> {
+                            if (success) {
+                                runOnUiThread(() -> {
+                                    // For example, load image into ImageView here
+                                    Glide.with(this)
+                                            .load(outputFile)
+                                            .placeholder(R.drawable.ic_bird_placeholder) //  a placeholder image
+                                            .error(R.drawable.ic_launcher_foreground)       // an error image if load fails
+                                            .into(imageViewDistribution);
+                                    System.out.println("Image saved at: " + outputFile.getAbsolutePath());
+                                });
+                            } else {
+                                System.out.println("Failed to process image");
+                            }
+                        });
+                    }
+
                 }
             }
 
@@ -633,5 +664,28 @@ public class QuizActivity extends AppCompatActivity implements  AchievementManag
         if (achievementManager != null) {
             achievementManager.unregisterDefinitionsLoadedListener(this);
         }
+    }
+    public boolean isOnSameWifiSubnet(Context context, String backendIp) {
+        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+
+        // Convert little-endian int to string IP
+        String deviceIp = String.format(
+                "%d.%d.%d.%d",
+                (ipAddress & 0xff),
+                (ipAddress >> 8 & 0xff),
+                (ipAddress >> 16 & 0xff),
+                (ipAddress >> 24 & 0xff)
+        );
+
+        Log.d("DeviceIP", "Device IP: " + deviceIp);
+        Log.d("BackendIP", "Backend IP: " + backendIp);
+
+        // Extract subnet (first 3 octets)
+        String deviceSubnet = deviceIp.substring(0, deviceIp.lastIndexOf('.'));
+        String backendSubnet = backendIp.substring(0, backendIp.lastIndexOf('.'));
+
+        // Check if subnets match
+        return deviceSubnet.equals(backendSubnet);
     }
 }
